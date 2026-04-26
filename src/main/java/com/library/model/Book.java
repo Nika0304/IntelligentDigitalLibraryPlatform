@@ -1,4 +1,4 @@
 package com.library.model;
 
-public enum Book {
+public class Book {
 }

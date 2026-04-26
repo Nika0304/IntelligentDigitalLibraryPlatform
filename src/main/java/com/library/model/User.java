@@ -1,4 +1,4 @@
 package com.library.model;
 
-public enum User {
+public class User {
 }
