@@ -1,5 +1,4 @@
 package com.library.model;
 
-
-public enum RoleType {
+public class User {
 }
