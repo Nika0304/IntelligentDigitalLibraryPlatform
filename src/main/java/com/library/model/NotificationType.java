@@ -1,4 +1,4 @@
 package com.library.model;
 
-public enum Notification {
+public enum NotificationType {
 }
