@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "books")
 
@@ -35,6 +37,7 @@ public class Book {
     )
     private List<Author> authors = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "book")
     private List<BookCopy> copies = new ArrayList<>();
 

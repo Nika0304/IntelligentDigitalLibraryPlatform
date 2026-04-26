@@ -3,6 +3,7 @@ package com.library.model;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "categories")
@@ -17,6 +18,7 @@ public class Category
     private String name;
 
     @OneToMany(mappedBy = "category")
+    @JsonIgnore
     private List<Book> books = new ArrayList<>();
 
     public Category() {}
