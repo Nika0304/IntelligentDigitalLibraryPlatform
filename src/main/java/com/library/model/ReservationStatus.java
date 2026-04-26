@@ -3,7 +3,7 @@ package com.library.model;
 public enum ReservationStatus {
     CREATED,
     CONFIRMED,
-    WAINTINNG,
+    WAITING,
     READY_FOR_PICKUP,
     BORROWED,
     EXPIRED,
