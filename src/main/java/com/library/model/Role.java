@@ -1,4 +1,4 @@
 package com.library.model;
 
-public enum Role {
+public class Role {
 }
