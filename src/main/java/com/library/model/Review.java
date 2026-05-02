@@ -16,6 +16,7 @@ public class Review {
     @Column(length = 1000)
     private String comment;
 
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @ManyToOne
@@ -35,6 +36,15 @@ public class Review {
         this.user = user;
         this.book = book;
         this.createdAt = LocalDateTime.now();
+    }
+
+    @PrePersist
+    protected void onCreate()
+    {
+        if (createdAt == null)
+        {
+            createdAt = LocalDateTime.now();
+        }
     }
 
     public Long getReviewId()

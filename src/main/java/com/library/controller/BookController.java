@@ -1,10 +1,12 @@
 package com.library.controller;
 
 import com.library.dto.BookRequest;
+import com.library.dto.BookResponse;
 import com.library.model.Book;
 import com.library.service.BookService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.library.dto.BookResponse;
 
 import java.util.List;
 
@@ -20,44 +22,143 @@ public class BookController
         this.bookService = bookService;
     }
 
-    //get all
+    // get all
     @GetMapping
-    public List<BookResponse> getAllBooks() {
-        return bookService.getAllBooksResponse();
+    public ResponseEntity<List<BookResponse>> getAllBooks()
+    {
+        return ResponseEntity.ok(bookService.getAllBooksResponse());
     }
 
-    //get by id
+    // get by id
     @GetMapping("/{id}")
-    public Book getBookById(@PathVariable Long id)
+    public ResponseEntity<?> getBookById(@PathVariable Long id)
     {
-        return bookService.getBookById(id);
+        try
+        {
+            return ResponseEntity.ok(bookService.getBookById(id));
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
     }
 
-    //cauta by title
+    // search by title
     @GetMapping("/search")
-    public List<Book> searchBooks(@RequestParam String title)
+    public ResponseEntity<?> searchBooks(@RequestParam String title)
     {
-        return bookService.searchBooksByTitle(title);
+        try
+        {
+            return ResponseEntity.ok(bookService.searchBooksByTitle(title));
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
     }
 
-    //creaza
+    // get books by category
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<?> getBooksByCategory(@PathVariable Long categoryId)
+    {
+        try
+        {
+            return ResponseEntity.ok(bookService.getBooksByCategory(categoryId));
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
+    }
+
+    // get digital books
+    @GetMapping("/digital")
+    public ResponseEntity<?> getDigitalBooks()
+    {
+        try
+        {
+            return ResponseEntity.ok(bookService.getDigitalBooks());
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
+    }
+
+    // get physical books
+    @GetMapping("/physical")
+    public ResponseEntity<?> getPhysicalBooks()
+    {
+        try
+        {
+            return ResponseEntity.ok(bookService.getPhysicalBooks());
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
+    }
+
+    // create
     @PostMapping
-    public Book createBook(@RequestBody BookRequest request)
+    public ResponseEntity<?> createBook(@RequestBody BookRequest request)
     {
-        return bookService.createBook(request);
+        try
+        {
+            return ResponseEntity.status(HttpStatus.CREATED).body(bookService.createBook(request));
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
     }
 
-    //update
+    // update
     @PutMapping("/{id}")
-    public Book updateBook(@PathVariable Long id, @RequestBody BookRequest request)
+    public ResponseEntity<?> updateBook(@PathVariable Long id, @RequestBody BookRequest request)
     {
-        return bookService.updateBook(id, request);
+        try
+        {
+            return ResponseEntity.ok(bookService.updateBook(id, request));
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
     }
 
-    //delete
+    // delete
     @DeleteMapping("/{id}")
-    public void deleteBook(@PathVariable Long id)
+    public ResponseEntity<?> deleteBook(@PathVariable Long id)
     {
-        bookService.deleteBook(id);
+        try
+        {
+            bookService.deleteBook(id);
+            return ResponseEntity.noContent().build();
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
+    }
+
+    private ResponseEntity<String> handleBookException(RuntimeException e)
+    {
+        String message = e.getMessage();
+
+        if (message != null && message.toLowerCase().contains("not found"))
+        {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message);
+        }
+
+        if (message != null && (
+                message.toLowerCase().contains("already exists") ||
+                        message.toLowerCase().contains("duplicate")
+        ))
+        {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(message);
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
     }
 }

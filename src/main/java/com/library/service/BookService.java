@@ -1,6 +1,7 @@
 package com.library.service;
 
 import com.library.dto.BookRequest;
+import com.library.dto.BookResponse;
 import com.library.model.Author;
 import com.library.model.Book;
 import com.library.model.Category;
@@ -8,9 +9,11 @@ import com.library.repository.AuthorRepository;
 import com.library.repository.BookRepository;
 import com.library.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
-import com.library.dto.BookResponse;
 
+import java.time.Year;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class BookService
@@ -20,7 +23,9 @@ public class BookService
     private final CategoryRepository categoryRepository;
     private final AuthorRepository authorRepository;
 
-    public BookService(BookRepository bookRepository, CategoryRepository categoryRepository, AuthorRepository authorRepository)
+    public BookService(BookRepository bookRepository,
+                       CategoryRepository categoryRepository,
+                       AuthorRepository authorRepository)
     {
         this.bookRepository = bookRepository;
         this.categoryRepository = categoryRepository;
@@ -30,6 +35,22 @@ public class BookService
     public List<Book> getAllBooks()
     {
         return bookRepository.findAll();
+    }
+
+    public List<BookResponse> getAllBooksResponse()
+    {
+        return bookRepository.findAll().stream()
+                .map(book -> new BookResponse(
+                        book.getBookId(),
+                        book.getTitle(),
+                        book.getCategory() != null ? book.getCategory().getName() : null,
+                        book.getAuthors() != null
+                                ? book.getAuthors().stream()
+                                .map(author -> author.getName())
+                                .toList()
+                                : List.of()
+                ))
+                .toList();
     }
 
     public Book getBookById(Long id)
@@ -74,12 +95,22 @@ public class BookService
         List<Author> authors = getAuthorsByIds(request.getAuthorIds());
 
         Book book = new Book();
+
         book.setTitle(request.getTitle().trim());
-        book.setDescription(request.getDescription());
+        book.setDescription(cleanText(request.getDescription()));
         book.setPublicationYear(request.getPublicationYear());
         book.setHasPhysicalCopy(request.isHasPhysicalCopy());
         book.setHasDigitalCopy(request.isHasDigitalCopy());
-        book.setDigitalFilePath(request.getDigitalFilePath());
+
+        if (request.isHasDigitalCopy())
+        {
+            book.setDigitalFilePath(request.getDigitalFilePath().trim());
+        }
+        else
+        {
+            book.setDigitalFilePath(null);
+        }
+
         book.setCategory(category);
         book.setAuthors(authors);
 
@@ -97,11 +128,20 @@ public class BookService
         List<Author> authors = getAuthorsByIds(request.getAuthorIds());
 
         existingBook.setTitle(request.getTitle().trim());
-        existingBook.setDescription(request.getDescription());
+        existingBook.setDescription(cleanText(request.getDescription()));
         existingBook.setPublicationYear(request.getPublicationYear());
         existingBook.setHasPhysicalCopy(request.isHasPhysicalCopy());
         existingBook.setHasDigitalCopy(request.isHasDigitalCopy());
-        existingBook.setDigitalFilePath(request.getDigitalFilePath());
+
+        if (request.isHasDigitalCopy())
+        {
+            existingBook.setDigitalFilePath(request.getDigitalFilePath().trim());
+        }
+        else
+        {
+            existingBook.setDigitalFilePath(null);
+        }
+
         existingBook.setCategory(category);
         existingBook.setAuthors(authors);
 
@@ -112,11 +152,14 @@ public class BookService
     {
         validateId(id);
 
-        if (!bookRepository.existsById(id)) {
-            throw new RuntimeException("Book not found with id: " + id);
+        Book book = getBookById(id);
+
+        if (book.getCopies() != null && !book.getCopies().isEmpty())
+        {
+            throw new RuntimeException("Book cannot be deleted because it has physical copies");
         }
 
-        bookRepository.deleteById(id);
+        bookRepository.delete(book);
     }
 
     private Category getCategoryById(Long categoryId)
@@ -132,6 +175,18 @@ public class BookService
         if (authorIds == null || authorIds.isEmpty())
         {
             throw new RuntimeException("At least one author is required");
+        }
+
+        for (Long authorId : authorIds)
+        {
+            validateId(authorId);
+        }
+
+        Set<Long> uniqueAuthorIds = new HashSet<>(authorIds);
+
+        if (uniqueAuthorIds.size() != authorIds.size())
+        {
+            throw new RuntimeException("Duplicate author ids are not allowed");
         }
 
         List<Author> authors = authorRepository.findAllById(authorIds);
@@ -161,9 +216,29 @@ public class BookService
             throw new RuntimeException("Category is required");
         }
 
-        if (request.getPublicationYear() != null && request.getPublicationYear() < 0)
+        if (request.getAuthorIds() == null || request.getAuthorIds().isEmpty())
         {
-            throw new RuntimeException("Publication year cannot be negative");
+            throw new RuntimeException("At least one author is required");
+        }
+
+        if (!request.isHasPhysicalCopy() && !request.isHasDigitalCopy())
+        {
+            throw new RuntimeException("Book must have at least one format: physical or digital");
+        }
+
+        if (request.getPublicationYear() != null)
+        {
+            int currentYear = Year.now().getValue();
+
+            if (request.getPublicationYear() < 0)
+            {
+                throw new RuntimeException("Publication year cannot be negative");
+            }
+
+            if (request.getPublicationYear() > currentYear)
+            {
+                throw new RuntimeException("Publication year cannot be in the future");
+            }
         }
 
         if (request.isHasDigitalCopy()
@@ -173,28 +248,21 @@ public class BookService
         }
     }
 
-    public List<BookResponse> getAllBooksResponse()
-    {
-        return bookRepository.findAll().stream()
-                .map(book -> new BookResponse(
-                        book.getBookId(),
-                        book.getTitle(),
-                        book.getCategory().getName(),
-                        book.getAuthors().stream()
-                                .map(a -> a.getName())
-                                .toList()
-                ))
-                .toList();
-    }
-
-
-
-
     private void validateId(Long id)
     {
         if (id == null || id <= 0)
         {
             throw new RuntimeException("Invalid id");
         }
+    }
+
+    private String cleanText(String text)
+    {
+        if (text == null || text.trim().isEmpty())
+        {
+            return null;
+        }
+
+        return text.trim();
     }
 }

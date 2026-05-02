@@ -34,6 +34,14 @@ public class CategoryService
     {
         validateCategory(category);
 
+        String name = category.getName().trim();
+        category.setName(name);
+
+        if (categoryRepository.existsByName(name))
+        {
+            throw new RuntimeException("Category already exists with name: " + name);
+        }
+
         return categoryRepository.save(category);
     }
 
@@ -44,7 +52,16 @@ public class CategoryService
 
         Category existingCategory = getCategoryById(id);
 
-        existingCategory.setName(updatedCategory.getName());
+        String newName = updatedCategory.getName().trim();
+
+        categoryRepository.findByName(newName).ifPresent(categoryWithSameName -> {
+            if (!categoryWithSameName.getCategoryId().equals(id))
+            {
+                throw new RuntimeException("Category already exists with name: " + newName);
+            }
+        });
+
+        existingCategory.setName(newName);
 
         return categoryRepository.save(existingCategory);
     }
@@ -53,7 +70,8 @@ public class CategoryService
     {
         validateId(id);
 
-        if (!categoryRepository.existsById(id)) {
+        if (!categoryRepository.existsById(id))
+        {
             throw new RuntimeException("Category not found with id: " + id);
         }
 

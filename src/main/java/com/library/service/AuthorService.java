@@ -9,7 +9,6 @@ import java.util.List;
 @Service
 public class AuthorService
 {
-
     private final AuthorRepository authorRepository;
 
     public AuthorService(AuthorRepository authorRepository)
@@ -22,31 +21,54 @@ public class AuthorService
         return authorRepository.findAll();
     }
 
+    public Author getAuthorById(Long id)
+    {
+        return authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Author not found with id: " + id));
+    }
+
     public Author createAuthor(Author author)
     {
-        if (author == null || author.getName() == null || author.getName().trim().isEmpty())
+        if (author.getName() == null || author.getName().trim().isEmpty())
         {
-            throw new RuntimeException("Author name cannot be empty");
+            throw new RuntimeException("Author name is required");
         }
 
-        //verificare duplicate
-        authorRepository.findByName(author.getName().trim())
-                .ifPresent(a -> {throw new RuntimeException("Author already exists");});
+        if (authorRepository.findByName(author.getName()).isPresent())
+        {
+            throw new RuntimeException("Author already exists: " + author.getName());
+        }
 
         return authorRepository.save(author);
     }
 
-    public void deleteAuthor(Long id) {
-        if (id == null || id <= 0)
+    public Author updateAuthor(Long id, Author request)
+    {
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Author not found with id: " + id));
+
+        if (request.getName() == null || request.getName().trim().isEmpty())
         {
-            throw new RuntimeException("Invalid author id");
+            throw new RuntimeException("Author name is required");
         }
 
-        if (!authorRepository.existsById(id))
-        {
-            throw new RuntimeException("Author not found");
-        }
+        authorRepository.findByName(request.getName()).ifPresent(existingAuthor -> {
+            if (!existingAuthor.getAuthorId().equals(id))
+            {
+                throw new RuntimeException("Author already exists: " + request.getName());
+            }
+        });
 
-        authorRepository.deleteById(id);
+        author.setName(request.getName());
+
+        return authorRepository.save(author);
+    }
+
+    public void deleteAuthor(Long id)
+    {
+        Author author = authorRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Author not found with id: " + id));
+
+        authorRepository.delete(author);
     }
 }
