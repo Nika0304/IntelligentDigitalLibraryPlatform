@@ -25,6 +25,10 @@ public class Book {
     private boolean hasDigitalCopy;
     private String digitalFilePath;
 
+    // NEW: URL public al copertei (Unsplash, Google Books etc.)
+    @Column(length = 500)
+    private String coverImageURL;
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
@@ -49,83 +53,37 @@ public class Book {
         this.category = category;
     }
 
-    public Long getBookId(){
-        return bookId;
-    }
+    public Long getBookId(){ return bookId; }
+    public void setBookId(Long bookId){ this.bookId = bookId; }
 
-    public void setBookId(Long bookId){
-        this.bookId = bookId;
-    }
+    public String getTitle(){ return title; }
+    public void setTitle(String title){ this.title = title; }
 
-    public String getTitle(){
-        return title;
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public void setTitle(String title){
-        this.title = title;
-    }
+    public Integer getPublicationYear() { return publicationYear; }
+    public void setPublicationYear(Integer publicationYear) { this.publicationYear = publicationYear; }
 
-    public String getDescription() {
-        return description;
-    }
+    public boolean isHasPhysicalCopy() { return hasPhysicalCopy; }
+    public void setHasPhysicalCopy(boolean hasPhysicalCopy) { this.hasPhysicalCopy = hasPhysicalCopy; }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+    public boolean isHasDigitalCopy() { return hasDigitalCopy; }
+    public void setHasDigitalCopy(boolean hasDigitalCopy) { this.hasDigitalCopy = hasDigitalCopy; }
 
-    public Integer getPublicationYear() {
-        return publicationYear;
-    }
+    public String getDigitalFilePath() { return digitalFilePath; }
+    public void setDigitalFilePath(String digitalFilePath) { this.digitalFilePath = digitalFilePath; }
 
-    public void setPublicationYear(Integer publicationYear) {
-        this.publicationYear = publicationYear;
-    }
+    // NEW
+    public String getCoverImageURL() { return coverImageURL; }
+    public void setCoverImageURL(String coverImageURL) { this.coverImageURL = coverImageURL; }
 
-    public boolean isHasPhysicalCopy() {
-        return hasPhysicalCopy;
-    }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 
-    public void setHasPhysicalCopy(boolean hasPhysicalCopy) {
-        this.hasPhysicalCopy = hasPhysicalCopy;
-    }
+    public List<Author> getAuthors() { return authors; }
+    public void setAuthors(List<Author> authors) { this.authors = authors; }
 
-    public boolean isHasDigitalCopy() {
-        return hasDigitalCopy;
-    }
-
-    public void setHasDigitalCopy(boolean hasDigitalCopy) {
-        this.hasDigitalCopy = hasDigitalCopy;
-    }
-
-    public String getDigitalFilePath() {
-        return digitalFilePath;
-    }
-
-    public void setDigitalFilePath(String digitalFilePath) {
-        this.digitalFilePath = digitalFilePath;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
-
-    public List<Author> getAuthors() {
-        return authors;
-    }
-
-    public void setAuthors(List<Author> authors) {
-        this.authors = authors;
-    }
-
-    public List<BookCopy> getCopies() {
-        return copies;
-    }
-
-    public void setCopies(List<BookCopy> copies) {
-        this.copies = copies;
-    }
+    public List<BookCopy> getCopies() { return copies; }
+    public void setCopies(List<BookCopy> copies) { this.copies = copies; }
 }

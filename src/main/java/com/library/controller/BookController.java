@@ -2,7 +2,6 @@ package com.library.controller;
 
 import com.library.dto.BookRequest;
 import com.library.dto.BookResponse;
-import com.library.model.Book;
 import com.library.service.BookService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +13,6 @@ import java.util.List;
 @RequestMapping("/api/books")
 public class BookController
 {
-
     private final BookService bookService;
 
     public BookController(BookService bookService)
@@ -22,20 +20,18 @@ public class BookController
         this.bookService = bookService;
     }
 
-    // get all
     @GetMapping
     public ResponseEntity<List<BookResponse>> getAllBooks()
     {
         return ResponseEntity.ok(bookService.getAllBooksResponse());
     }
 
-    // get by id
     @GetMapping("/{id}")
     public ResponseEntity<?> getBookById(@PathVariable Long id)
     {
         try
         {
-            return ResponseEntity.ok(bookService.getBookById(id));
+            return ResponseEntity.ok(bookService.getBookResponseById(id));
         }
         catch (RuntimeException e)
         {
@@ -43,13 +39,12 @@ public class BookController
         }
     }
 
-    // search by title
     @GetMapping("/search")
     public ResponseEntity<?> searchBooks(@RequestParam String title)
     {
         try
         {
-            return ResponseEntity.ok(bookService.searchBooksByTitle(title));
+            return ResponseEntity.ok(bookService.searchBooksByTitleResponse(title));
         }
         catch (RuntimeException e)
         {
@@ -57,13 +52,12 @@ public class BookController
         }
     }
 
-    // get books by category
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<?> getBooksByCategory(@PathVariable Long categoryId)
     {
         try
         {
-            return ResponseEntity.ok(bookService.getBooksByCategory(categoryId));
+            return ResponseEntity.ok(bookService.getBooksByCategoryResponse(categoryId));
         }
         catch (RuntimeException e)
         {
@@ -71,35 +65,18 @@ public class BookController
         }
     }
 
-    // get digital books
     @GetMapping("/digital")
     public ResponseEntity<?> getDigitalBooks()
     {
-        try
-        {
-            return ResponseEntity.ok(bookService.getDigitalBooks());
-        }
-        catch (RuntimeException e)
-        {
-            return handleBookException(e);
-        }
+        return ResponseEntity.ok(bookService.getDigitalBooksResponse());
     }
 
-    // get physical books
     @GetMapping("/physical")
     public ResponseEntity<?> getPhysicalBooks()
     {
-        try
-        {
-            return ResponseEntity.ok(bookService.getPhysicalBooks());
-        }
-        catch (RuntimeException e)
-        {
-            return handleBookException(e);
-        }
+        return ResponseEntity.ok(bookService.getPhysicalBooksResponse());
     }
 
-    // create
     @PostMapping
     public ResponseEntity<?> createBook(@RequestBody BookRequest request)
     {
@@ -113,7 +90,6 @@ public class BookController
         }
     }
 
-    // update
     @PutMapping("/{id}")
     public ResponseEntity<?> updateBook(@PathVariable Long id, @RequestBody BookRequest request)
     {
@@ -127,7 +103,6 @@ public class BookController
         }
     }
 
-    // delete
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteBook(@PathVariable Long id)
     {
