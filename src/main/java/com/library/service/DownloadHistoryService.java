@@ -29,32 +29,87 @@ public class DownloadHistoryService
     }
 
     @Transactional(readOnly = true)
+    public List<DownloadHistory> getAllDownloads()
+    {
+        return downloadRepository.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public List<DownloadHistory> getUserDownloads(Long userId)
     {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        User user = getUserById(userId);
+
         return downloadRepository.findByUserOrderByDownloadDateDesc(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<DownloadHistory> getBookDownloads(Long bookId)
+    {
+        Book book = getBookById(bookId);
+
+        return downloadRepository.findByBookOrderByDownloadDateDesc(book);
     }
 
     @Transactional
     public DownloadHistory recordDownload(DownloadRequest request)
     {
-        if (request == null || request.getUserId() == null || request.getBookId() == null)
-        {
-            throw new RuntimeException("User id and book id are required");
-        }
+        validateDownloadRequest(request);
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
-
-        Book book = bookRepository.findById(request.getBookId())
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + request.getBookId()));
+        User user = getUserById(request.getUserId());
+        Book book = getBookById(request.getBookId());
 
         if (!book.isHasDigitalCopy())
         {
-            throw new RuntimeException("Book does not have a digital copy");
+            throw new IllegalStateException("Book does not have a digital copy");
         }
 
-        return downloadRepository.save(new DownloadHistory(user, book));
+        if (book.getDigitalFilePath() == null || book.getDigitalFilePath().trim().isEmpty())
+        {
+            throw new IllegalStateException("Book digital file path is missing");
+        }
+
+        DownloadHistory downloadHistory = new DownloadHistory(user, book);
+
+        return downloadRepository.save(downloadHistory);
+    }
+
+    private User getUserById(Long userId)
+    {
+        validateId(userId, "User id");
+
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+    }
+
+    private Book getBookById(Long bookId)
+    {
+        validateId(bookId, "Book id");
+
+        return bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found with id: " + bookId));
+    }
+
+    private void validateDownloadRequest(DownloadRequest request)
+    {
+        if (request == null)
+        {
+            throw new IllegalArgumentException("Download request is required");
+        }
+
+        validateId(request.getUserId(), "User id");
+        validateId(request.getBookId(), "Book id");
+    }
+
+    private void validateId(Long id, String fieldName)
+    {
+        if (id == null)
+        {
+            throw new IllegalArgumentException(fieldName + " is required");
+        }
+
+        if (id <= 0)
+        {
+            throw new IllegalArgumentException(fieldName + " must be greater than 0");
+        }
     }
 }

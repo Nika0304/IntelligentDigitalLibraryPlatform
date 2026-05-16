@@ -2,6 +2,7 @@ package com.library.service;
 
 import com.library.model.Fine;
 import com.library.model.FineStatus;
+import com.library.model.NotificationType;
 import com.library.model.Reservation;
 import com.library.model.User;
 import com.library.repository.FineRepository;
@@ -23,14 +24,17 @@ public class FineService
     private final FineRepository fineRepository;
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
+    private final NotificationService notificationService;
 
     public FineService(FineRepository fineRepository,
                        UserRepository userRepository,
-                       ReservationRepository reservationRepository)
+                       ReservationRepository reservationRepository,
+                       NotificationService notificationService)
     {
         this.fineRepository = fineRepository;
         this.userRepository = userRepository;
         this.reservationRepository = reservationRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -130,7 +134,17 @@ public class FineService
         fine.setStatus(FineStatus.PENDING);
         fine.setReason("Overdue return for book: " + reservation.getBook().getTitle());
 
-        return fineRepository.save(fine);
+        Fine savedFine = fineRepository.save(fine);
+
+        notificationService.createAutomaticNotification(
+                savedFine.getUser(),
+                "You have a new fine of " + savedFine.getAmount() + " for returning \"" +
+                        savedFine.getReservation().getBook().getTitle() + "\" late by " +
+                        savedFine.getOverdueDays() + " day(s).",
+                NotificationType.OVERDUE
+        );
+
+        return savedFine;
     }
 
     @Transactional
@@ -151,7 +165,16 @@ public class FineService
         fine.setStatus(FineStatus.PAID);
         fine.setPaidAt(LocalDateTime.now());
 
-        return fineRepository.save(fine);
+        Fine savedFine = fineRepository.save(fine);
+
+        notificationService.createAutomaticNotification(
+                savedFine.getUser(),
+                "Your fine of " + savedFine.getAmount() + " for \"" +
+                        savedFine.getReservation().getBook().getTitle() + "\" has been marked as paid.",
+                NotificationType.GENERAL
+        );
+
+        return savedFine;
     }
 
     @Transactional
@@ -171,7 +194,16 @@ public class FineService
 
         fine.setStatus(FineStatus.CANCELLED);
 
-        return fineRepository.save(fine);
+        Fine savedFine = fineRepository.save(fine);
+
+        notificationService.createAutomaticNotification(
+                savedFine.getUser(),
+                "Your fine of " + savedFine.getAmount() + " for \"" +
+                        savedFine.getReservation().getBook().getTitle() + "\" has been cancelled.",
+                NotificationType.GENERAL
+        );
+
+        return savedFine;
     }
 
     @Transactional
