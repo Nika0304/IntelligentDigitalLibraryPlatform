@@ -22,14 +22,17 @@ public class BorrowingService
     private final ReservationRepository reservationRepository;
     private final BookCopyRepository bookCopyRepository;
     private final NotificationService notificationService;
+    private final FineService fineService;
 
     public BorrowingService(ReservationRepository reservationRepository,
                             BookCopyRepository bookCopyRepository,
-                            NotificationService notificationService)
+                            NotificationService notificationService,
+                            FineService fineService)
     {
         this.reservationRepository = reservationRepository;
         this.bookCopyRepository = bookCopyRepository;
         this.notificationService = notificationService;
+        this.fineService = fineService;
     }
 
     @Transactional
@@ -133,6 +136,7 @@ public class BorrowingService
                 NotificationType.BOOK_RETURNED
         );
 
+        fineService.createFineForOverdueReturn(savedReservation);
         return savedReservation;
     }
 
