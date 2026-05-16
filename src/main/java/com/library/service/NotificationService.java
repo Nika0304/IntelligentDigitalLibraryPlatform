@@ -68,6 +68,13 @@ public class NotificationService
         return notificationRepository.findByUserAndTypeAndIsReadFalseOrderByCreatedAtDesc(user, type);
     }
 
+    public List<Notification> getNotificationsByType(NotificationType type)
+    {
+        validateNotificationType(type);
+
+        return notificationRepository.findByTypeOrderByCreatedAtDesc(type);
+    }
+
     public Notification createNotification(NotificationRequest request)
     {
         validateNotificationRequest(request);
@@ -127,6 +134,25 @@ public class NotificationService
         validateNotificationType(type);
 
         User user = getUserOrThrow(userId);
+
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setMessage(normalizeMessage(message));
+        notification.setType(type);
+        notification.setRead(false);
+
+        return notificationRepository.save(notification);
+    }
+
+    public Notification createAutomaticNotification(User user, String message, NotificationType type)
+    {
+        if (user == null)
+        {
+            throw new IllegalArgumentException("User is required");
+        }
+
+        validateMessage(message);
+        validateNotificationType(type);
 
         Notification notification = new Notification();
         notification.setUser(user);

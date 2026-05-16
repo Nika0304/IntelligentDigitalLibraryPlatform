@@ -4,6 +4,7 @@ import com.library.dto.ReservationRequest;
 import com.library.model.Book;
 import com.library.model.BookCopy;
 import com.library.model.BookCopyStatus;
+import com.library.model.NotificationType;
 import com.library.model.Reservation;
 import com.library.model.ReservationStatus;
 import com.library.model.User;
@@ -28,16 +29,19 @@ public class ReservationService
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
     private final BookCopyRepository bookCopyRepository;
+    private final NotificationService notificationService;
 
     public ReservationService(ReservationRepository reservationRepository,
                               UserRepository userRepository,
                               BookRepository bookRepository,
-                              BookCopyRepository bookCopyRepository)
+                              BookCopyRepository bookCopyRepository,
+                              NotificationService notificationService)
     {
         this.reservationRepository = reservationRepository;
         this.userRepository = userRepository;
         this.bookRepository = bookRepository;
         this.bookCopyRepository = bookCopyRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -126,7 +130,26 @@ public class ReservationService
             reservation.setStatus(ReservationStatus.WAITING);
         }
 
-        return reservationRepository.save(reservation);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        if (savedReservation.getStatus() == ReservationStatus.CONFIRMED)
+        {
+            notificationService.createAutomaticNotification(
+                    savedReservation.getUser(),
+                    "Your reservation for \"" + savedReservation.getBook().getTitle() + "\" has been confirmed.",
+                    NotificationType.RESERVATION_CONFIRMED
+            );
+        }
+        else if (savedReservation.getStatus() == ReservationStatus.WAITING)
+        {
+            notificationService.createAutomaticNotification(
+                    savedReservation.getUser(),
+                    "There are no available copies for \"" + savedReservation.getBook().getTitle() + "\". You have been added to the waiting list.",
+                    NotificationType.RESERVATION_WAITING
+            );
+        }
+
+        return savedReservation;
     }
 
     @Transactional
@@ -157,7 +180,15 @@ public class ReservationService
         bookCopy.setStatus(BookCopyStatus.READY_FOR_PICKUP);
         bookCopyRepository.save(bookCopy);
 
-        return reservationRepository.save(reservation);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        notificationService.createAutomaticNotification(
+                savedReservation.getUser(),
+                "Your reserved book \"" + savedReservation.getBook().getTitle() + "\" is ready for pickup.",
+                NotificationType.READY_FOR_PICKUP
+        );
+
+        return savedReservation;
     }
 
     @Transactional
@@ -196,7 +227,15 @@ public class ReservationService
             assignCopyToNextWaitingReservationOrMakeAvailable(reservation.getBook(), bookCopy);
         }
 
-        return reservationRepository.save(reservation);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        notificationService.createAutomaticNotification(
+                savedReservation.getUser(),
+                "Your reservation for \"" + savedReservation.getBook().getTitle() + "\" has been cancelled.",
+                NotificationType.RESERVATION_CANCELLED
+        );
+
+        return savedReservation;
     }
 
     @Transactional
@@ -233,7 +272,15 @@ public class ReservationService
             assignCopyToNextWaitingReservationOrMakeAvailable(reservation.getBook(), bookCopy);
         }
 
-        return reservationRepository.save(reservation);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        notificationService.createAutomaticNotification(
+                savedReservation.getUser(),
+                "Your reservation for \"" + savedReservation.getBook().getTitle() + "\" has expired.",
+                NotificationType.RESERVATION_EXPIRED
+        );
+
+        return savedReservation;
     }
 
     @Transactional
@@ -267,7 +314,13 @@ public class ReservationService
 
             bookCopy.setStatus(BookCopyStatus.RESERVED);
 
-            reservationRepository.save(nextWaitingReservation);
+            Reservation savedNextWaitingReservation = reservationRepository.save(nextWaitingReservation);
+
+            notificationService.createAutomaticNotification(
+                    savedNextWaitingReservation.getUser(),
+                    "A copy of \"" + savedNextWaitingReservation.getBook().getTitle() + "\" is now available and has been reserved for you.",
+                    NotificationType.WAITING_LIST_AVAILABLE
+            );
         }
         else
         {

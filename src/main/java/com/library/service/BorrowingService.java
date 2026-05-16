@@ -5,6 +5,7 @@ import com.library.model.BookCopy;
 import com.library.model.BookCopyStatus;
 import com.library.model.Reservation;
 import com.library.model.ReservationStatus;
+import com.library.model.NotificationType;
 import com.library.repository.BookCopyRepository;
 import com.library.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
@@ -20,12 +21,15 @@ public class BorrowingService
 
     private final ReservationRepository reservationRepository;
     private final BookCopyRepository bookCopyRepository;
+    private final NotificationService notificationService;
 
     public BorrowingService(ReservationRepository reservationRepository,
-                            BookCopyRepository bookCopyRepository)
+                            BookCopyRepository bookCopyRepository,
+                            NotificationService notificationService)
     {
         this.reservationRepository = reservationRepository;
         this.bookCopyRepository = bookCopyRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -58,7 +62,15 @@ public class BorrowingService
         bookCopy.setStatus(BookCopyStatus.BORROWED);
 
         bookCopyRepository.save(bookCopy);
-        return reservationRepository.save(reservation);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        notificationService.createAutomaticNotification(
+                savedReservation.getUser(),
+                "You have successfully borrowed \"" + savedReservation.getBook().getTitle() + "\".",
+                NotificationType.BOOK_BORROWED
+        );
+
+        return savedReservation;
     }
 
     @Transactional
@@ -98,7 +110,13 @@ public class BorrowingService
 
             bookCopy.setStatus(BookCopyStatus.RESERVED);
 
-            reservationRepository.save(nextWaitingReservation);
+            Reservation savedNextWaitingReservation = reservationRepository.save(nextWaitingReservation);
+
+            notificationService.createAutomaticNotification(
+                    savedNextWaitingReservation.getUser(),
+                    "A copy of \"" + savedNextWaitingReservation.getBook().getTitle() + "\" is now available and has been reserved for you.",
+                    NotificationType.WAITING_LIST_AVAILABLE
+            );
         }
         else
         {
@@ -107,7 +125,15 @@ public class BorrowingService
 
         bookCopyRepository.save(bookCopy);
 
-        return reservationRepository.save(reservation);
+        Reservation savedReservation = reservationRepository.save(reservation);
+
+        notificationService.createAutomaticNotification(
+                savedReservation.getUser(),
+                "You have successfully returned \"" + savedReservation.getBook().getTitle() + "\".",
+                NotificationType.BOOK_RETURNED
+        );
+
+        return savedReservation;
     }
 
     @Transactional(readOnly = true)
