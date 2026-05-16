@@ -35,6 +35,16 @@ public class Notification {
         this.isRead = false;
     }
 
+    //@PrePersist se execută automat înainte ca obiectul să fie salvat în baza de date. Așa, orice notificare nouă primește automat data creării, indiferent dacă o creezi cu:new Notification() sau new Notification(message, type, user)
+    @PrePersist
+    protected void onCreate()
+    {
+        if (createdAt == null)
+        {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
     public Long getNotificationId() {
         return notificationId;
     }
