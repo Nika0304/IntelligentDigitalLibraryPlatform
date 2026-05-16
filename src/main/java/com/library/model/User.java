@@ -1,4 +1,6 @@
 package com.library.model;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -15,6 +17,8 @@ public class User
     @Column(nullable = false, unique = true)
     private String email;
 
+    // IMPORTANT: niciodată nu trimite parola în JSON
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
@@ -37,63 +41,21 @@ public class User
         this.status = UserStatus.ACTIVE;
     }
 
-    public Long getUserId()
-    {
-        return userId;
-    }
+    public Long getUserId() { return userId; }
+    public void setUserId(Long userId) { this.userId = userId; }
 
-    public void setUserId(Long userId)
-    {
-        this.userId = userId;
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public String getFullName()
-    {
-        return fullName;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setFullName(String fullName)
-    {
-        this.fullName = fullName;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public String getEmail()
-    {
-        return email;
-    }
+    public UserStatus getStatus() { return status; }
+    public void setStatus(UserStatus status) { this.status = status; }
 
-    public void setEmail(String email)
-    {
-        this.email = email;
-    }
-
-    public String getPassword()
-    {
-        return password;
-    }
-
-    public void setPassword(String password)
-    {
-        this.password = password;
-    }
-
-    public UserStatus getStatus()
-    {
-        return status;
-    }
-
-    public void setStatus(UserStatus status)
-    {
-        this.status = status;
-    }
-
-    public Role getRole()
-    {
-        return role;
-    }
-
-    public void setRole(Role role)
-    {
-        this.role = role;
-    }
+    public Role getRole() { return role; }
+    public void setRole(Role role) { this.role = role; }
 }

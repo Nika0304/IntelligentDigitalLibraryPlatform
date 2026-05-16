@@ -4,10 +4,13 @@ import com.library.dto.BookRequest;
 import com.library.dto.BookResponse;
 import com.library.model.Author;
 import com.library.model.Book;
+import com.library.model.BookCopyStatus;
 import com.library.model.Category;
 import com.library.repository.AuthorRepository;
+import com.library.repository.BookCopyRepository;
 import com.library.repository.BookRepository;
 import com.library.repository.CategoryRepository;
+import com.library.repository.ReviewRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.Year;
@@ -22,14 +25,20 @@ public class BookService
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
     private final AuthorRepository authorRepository;
+    private final BookCopyRepository bookCopyRepository;
+    private final ReviewRepository reviewRepository;
 
     public BookService(BookRepository bookRepository,
                        CategoryRepository categoryRepository,
-                       AuthorRepository authorRepository)
+                       AuthorRepository authorRepository,
+                       BookCopyRepository bookCopyRepository,
+                       ReviewRepository reviewRepository)
     {
         this.bookRepository = bookRepository;
         this.categoryRepository = categoryRepository;
         this.authorRepository = authorRepository;
+        this.bookCopyRepository = bookCopyRepository;
+        this.reviewRepository = reviewRepository;
     }
 
     public List<Book> getAllBooks()
@@ -39,18 +48,32 @@ public class BookService
 
     public List<BookResponse> getAllBooksResponse()
     {
-        return bookRepository.findAll().stream()
-                .map(book -> new BookResponse(
-                        book.getBookId(),
-                        book.getTitle(),
-                        book.getCategory() != null ? book.getCategory().getName() : null,
-                        book.getAuthors() != null
-                                ? book.getAuthors().stream()
-                                .map(author -> author.getName())
-                                .toList()
-                                : List.of()
-                ))
-                .toList();
+        return bookRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    public BookResponse getBookResponseById(Long id)
+    {
+        return toResponse(getBookById(id));
+    }
+
+    public List<BookResponse> searchBooksByTitleResponse(String title)
+    {
+        return searchBooksByTitle(title).stream().map(this::toResponse).toList();
+    }
+
+    public List<BookResponse> getBooksByCategoryResponse(Long categoryId)
+    {
+        return getBooksByCategory(categoryId).stream().map(this::toResponse).toList();
+    }
+
+    public List<BookResponse> getDigitalBooksResponse()
+    {
+        return getDigitalBooks().stream().map(this::toResponse).toList();
+    }
+
+    public List<BookResponse> getPhysicalBooksResponse()
+    {
+        return getPhysicalBooks().stream().map(this::toResponse).toList();
     }
 
     public Book getBookById(Long id)
@@ -87,7 +110,7 @@ public class BookService
         return bookRepository.findByHasPhysicalCopyTrue();
     }
 
-    public Book createBook(BookRequest request)
+    public BookResponse createBook(BookRequest request)
     {
         validateBookRequest(request);
 
@@ -101,6 +124,7 @@ public class BookService
         book.setPublicationYear(request.getPublicationYear());
         book.setHasPhysicalCopy(request.isHasPhysicalCopy());
         book.setHasDigitalCopy(request.isHasDigitalCopy());
+        book.setCoverImageURL(cleanText(request.getCoverImageURL()));
 
         if (request.isHasDigitalCopy())
         {
@@ -114,10 +138,10 @@ public class BookService
         book.setCategory(category);
         book.setAuthors(authors);
 
-        return bookRepository.save(book);
+        return toResponse(bookRepository.save(book));
     }
 
-    public Book updateBook(Long id, BookRequest request)
+    public BookResponse updateBook(Long id, BookRequest request)
     {
         validateId(id);
         validateBookRequest(request);
@@ -132,6 +156,7 @@ public class BookService
         existingBook.setPublicationYear(request.getPublicationYear());
         existingBook.setHasPhysicalCopy(request.isHasPhysicalCopy());
         existingBook.setHasDigitalCopy(request.isHasDigitalCopy());
+        existingBook.setCoverImageURL(cleanText(request.getCoverImageURL()));
 
         if (request.isHasDigitalCopy())
         {
@@ -145,7 +170,7 @@ public class BookService
         existingBook.setCategory(category);
         existingBook.setAuthors(authors);
 
-        return bookRepository.save(existingBook);
+        return toResponse(bookRepository.save(existingBook));
     }
 
     public void deleteBook(Long id)
@@ -160,6 +185,40 @@ public class BookService
         }
 
         bookRepository.delete(book);
+    }
+
+    /** Centralized mapper used by all *Response endpoints. */
+    public BookResponse toResponse(Book book)
+    {
+        int totalCopies = bookCopyRepository.findByBook(book).size();
+        int availableCopies = bookCopyRepository.findByBookAndStatus(book, BookCopyStatus.AVAILABLE).size();
+
+        var reviews = reviewRepository.findByBook(book);
+        double avg = reviews.isEmpty() ? 0
+                : Math.round(reviews.stream().mapToInt(r -> r.getRating()).average().orElse(0) * 10.0) / 10.0;
+
+        return new BookResponse(
+                book.getBookId(),
+                book.getTitle(),
+                book.getDescription(),
+                book.getPublicationYear(),
+                book.isHasPhysicalCopy(),
+                book.isHasDigitalCopy(),
+                book.getDigitalFilePath(),
+                book.getCoverImageURL(),
+                book.getCategory() != null ? book.getCategory().getCategoryId() : null,
+                book.getCategory() != null ? book.getCategory().getName() : null,
+                book.getAuthors() != null
+                        ? book.getAuthors().stream().map(Author::getAuthorId).toList()
+                        : List.of(),
+                book.getAuthors() != null
+                        ? book.getAuthors().stream().map(Author::getName).toList()
+                        : List.of(),
+                totalCopies,
+                availableCopies,
+                avg,
+                reviews.size()
+        );
     }
 
     private Category getCategoryById(Long categoryId)

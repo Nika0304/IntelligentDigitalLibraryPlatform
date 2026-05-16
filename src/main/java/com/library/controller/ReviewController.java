@@ -1,6 +1,7 @@
 package com.library.controller;
 
 import com.library.dto.ReviewRequest;
+import com.library.dto.ReviewResponse;
 import com.library.model.Review;
 import com.library.service.ReviewService;
 import org.springframework.http.HttpStatus;
@@ -13,7 +14,6 @@ import java.util.List;
 @RequestMapping("/api/reviews")
 public class ReviewController
 {
-
     private final ReviewService reviewService;
 
     public ReviewController(ReviewService reviewService)
@@ -21,17 +21,30 @@ public class ReviewController
         this.reviewService = reviewService;
     }
 
+    private ReviewResponse toResponse(Review r)
+    {
+        return new ReviewResponse(
+                r.getReviewId(),
+                r.getRating(),
+                r.getComment(),
+                r.getCreatedAt(),
+                r.getUser() != null ? r.getUser().getUserId() : null,
+                r.getBook() != null ? r.getBook().getBookId() : null,
+                r.getUser() != null ? r.getUser().getFullName() : "Utilizator"
+        );
+    }
+
     @GetMapping
     public ResponseEntity<?> getAllReviews()
     {
         try
         {
-            List<Review> reviews = reviewService.getAllReviews();
+            List<ReviewResponse> reviews = reviewService.getAllReviews().stream().map(this::toResponse).toList();
             return ResponseEntity.ok(reviews);
         }
         catch (Exception e)
         {
-            return handleGenericException(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
         }
     }
 
@@ -40,16 +53,15 @@ public class ReviewController
     {
         try
         {
-            Review review = reviewService.getReviewById(reviewId);
-            return ResponseEntity.ok(review);
+            return ResponseEntity.ok(toResponse(reviewService.getReviewById(reviewId)));
         }
         catch (IllegalArgumentException e)
         {
-            return handleBadRequestException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
         catch (RuntimeException e)
         {
-            return handleNotFoundException(e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -58,16 +70,16 @@ public class ReviewController
     {
         try
         {
-            List<Review> reviews = reviewService.getReviewsByBookId(bookId);
+            List<ReviewResponse> reviews = reviewService.getReviewsByBookId(bookId).stream().map(this::toResponse).toList();
             return ResponseEntity.ok(reviews);
         }
         catch (IllegalArgumentException e)
         {
-            return handleBadRequestException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
         catch (RuntimeException e)
         {
-            return handleNotFoundException(e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -76,16 +88,16 @@ public class ReviewController
     {
         try
         {
-            List<Review> reviews = reviewService.getReviewsByUserId(userId);
+            List<ReviewResponse> reviews = reviewService.getReviewsByUserId(userId).stream().map(this::toResponse).toList();
             return ResponseEntity.ok(reviews);
         }
         catch (IllegalArgumentException e)
         {
-            return handleBadRequestException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
         catch (RuntimeException e)
         {
-            return handleNotFoundException(e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -94,20 +106,20 @@ public class ReviewController
     {
         try
         {
-            Review createdReview = reviewService.createReview(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);
+            Review created = reviewService.createReview(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(created));
         }
         catch (IllegalArgumentException e)
         {
-            return handleBadRequestException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
         catch (IllegalStateException e)
         {
-            return handleConflictException(e);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
         catch (RuntimeException e)
         {
-            return handleNotFoundException(e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -116,20 +128,19 @@ public class ReviewController
     {
         try
         {
-            Review updatedReview = reviewService.updateReview(reviewId, request);
-            return ResponseEntity.ok(updatedReview);
+            return ResponseEntity.ok(toResponse(reviewService.updateReview(reviewId, request)));
         }
         catch (IllegalArgumentException e)
         {
-            return handleBadRequestException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
         catch (IllegalStateException e)
         {
-            return handleConflictException(e);
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
         }
         catch (RuntimeException e)
         {
-            return handleNotFoundException(e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -143,32 +154,11 @@ public class ReviewController
         }
         catch (IllegalArgumentException e)
         {
-            return handleBadRequestException(e);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
         catch (RuntimeException e)
         {
-            return handleNotFoundException(e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
-    }
-
-    private ResponseEntity<String> handleBadRequestException(Exception e)
-    {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-    }
-
-    private ResponseEntity<String> handleNotFoundException(Exception e)
-    {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
-
-    private ResponseEntity<String> handleConflictException(Exception e)
-    {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-    }
-
-    private ResponseEntity<String> handleGenericException(Exception e)
-    {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("An unexpected error occurred");
     }
 }
