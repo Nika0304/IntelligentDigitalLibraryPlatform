@@ -31,40 +31,80 @@ public class WishlistService
     @Transactional(readOnly = true)
     public List<Wishlist> getUserWishlist(Long userId)
     {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+        User user = getUserById(userId);
+
         return wishlistRepository.findByUser(user);
     }
 
     @Transactional
     public Wishlist addToWishlist(WishlistRequest request)
     {
-        if (request == null || request.getUserId() == null || request.getBookId() == null)
-        {
-            throw new RuntimeException("User id and book id are required");
-        }
+        validateWishlistRequest(request);
 
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + request.getUserId()));
-
-        Book book = bookRepository.findById(request.getBookId())
-                .orElseThrow(() -> new RuntimeException("Book not found with id: " + request.getBookId()));
+        User user = getUserById(request.getUserId());
+        Book book = getBookById(request.getBookId());
 
         if (wishlistRepository.existsByUserAndBook(user, book))
         {
-            throw new RuntimeException("Book already in wishlist");
+            throw new IllegalStateException("Book already in wishlist");
         }
 
-        return wishlistRepository.save(new Wishlist(user, book));
+        Wishlist wishlist = new Wishlist(user, book);
+
+        return wishlistRepository.save(wishlist);
     }
 
     @Transactional
     public void removeFromWishlist(Long userId, Long bookId)
     {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+        User user = getUserById(userId);
+        Book book = getBookById(bookId);
+
+        if (!wishlistRepository.existsByUserAndBook(user, book))
+        {
+            throw new RuntimeException("Wishlist item not found");
+        }
+
         wishlistRepository.deleteByUserAndBook(user, book);
+    }
+
+    private User getUserById(Long userId)
+    {
+        validateId(userId, "User id");
+
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+    }
+
+    private Book getBookById(Long bookId)
+    {
+        validateId(bookId, "Book id");
+
+        return bookRepository.findById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found with id: " + bookId));
+    }
+
+    private void validateWishlistRequest(WishlistRequest request)
+    {
+        if (request == null)
+        {
+            throw new IllegalArgumentException("Wishlist request is required");
+        }
+
+        validateId(request.getUserId(), "User id");
+        validateId(request.getBookId(), "Book id");
+    }
+
+    private void validateId(Long id, String fieldName)
+    {
+        if (id == null)
+        {
+            throw new IllegalArgumentException(fieldName + " is required");
+        }
+
+        if (id <= 0)
+        {
+            throw new IllegalArgumentException(fieldName + " must be greater than 0");
+        }
     }
 }

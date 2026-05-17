@@ -1,6 +1,7 @@
 package com.library.controller;
 
 import com.library.dto.WishlistRequest;
+import com.library.model.Book;
 import com.library.model.Wishlist;
 import com.library.service.WishlistService;
 import org.springframework.http.HttpStatus;
@@ -26,13 +27,24 @@ public class WishlistController
         try
         {
             List<Wishlist> wishlist = wishlistService.getUserWishlist(userId);
-            // Return as list of books (frontend expects BookResponse-like array)
-            List<?> books = wishlist.stream().map(Wishlist::getBook).toList();
+
+            List<Book> books = wishlist.stream()
+                    .map(Wishlist::getBook)
+                    .toList();
+
             return ResponseEntity.ok(books);
+        }
+        catch (IllegalArgumentException e)
+        {
+            return handleBadRequestException(e);
         }
         catch (RuntimeException e)
         {
-            return handleException(e);
+            return handleNotFoundException(e);
+        }
+        catch (Exception e)
+        {
+            return handleGenericException(e);
         }
     }
 
@@ -41,43 +53,70 @@ public class WishlistController
     {
         try
         {
-            Wishlist created = wishlistService.addToWishlist(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+            Wishlist createdWishlist = wishlistService.addToWishlist(request);
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdWishlist);
+        }
+        catch (IllegalArgumentException e)
+        {
+            return handleBadRequestException(e);
+        }
+        catch (IllegalStateException e)
+        {
+            return handleConflictException(e);
         }
         catch (RuntimeException e)
         {
-            return handleException(e);
+            return handleNotFoundException(e);
+        }
+        catch (Exception e)
+        {
+            return handleGenericException(e);
         }
     }
 
     @DeleteMapping
-    public ResponseEntity<?> removeFromWishlist(@RequestParam Long userId, @RequestParam Long bookId)
+    public ResponseEntity<?> removeFromWishlist(@RequestParam Long userId,
+                                                @RequestParam Long bookId)
     {
         try
         {
             wishlistService.removeFromWishlist(userId, bookId);
+
             return ResponseEntity.noContent().build();
+        }
+        catch (IllegalArgumentException e)
+        {
+            return handleBadRequestException(e);
         }
         catch (RuntimeException e)
         {
-            return handleException(e);
+            return handleNotFoundException(e);
+        }
+        catch (Exception e)
+        {
+            return handleGenericException(e);
         }
     }
 
-    private ResponseEntity<String> handleException(RuntimeException e)
+    private ResponseEntity<String> handleBadRequestException(Exception e)
     {
-        String message = e.getMessage();
+        return ResponseEntity.badRequest().body(e.getMessage());
+    }
 
-        if (message != null && message.toLowerCase().contains("not found"))
-        {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(message);
-        }
+    private ResponseEntity<String> handleNotFoundException(Exception e)
+    {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+    }
 
-        if (message != null && message.toLowerCase().contains("already"))
-        {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(message);
-        }
+    private ResponseEntity<String> handleConflictException(Exception e)
+    {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+    }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
+    private ResponseEntity<String> handleGenericException(Exception e)
+    {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Unexpected error: " + e.getMessage());
     }
 }
