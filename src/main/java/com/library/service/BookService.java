@@ -11,6 +11,8 @@ import com.library.repository.BookCopyRepository;
 import com.library.repository.BookRepository;
 import com.library.repository.CategoryRepository;
 import com.library.repository.ReviewRepository;
+import com.library.repository.ReservationRepository;
+
 import org.springframework.stereotype.Service;
 
 import java.time.Year;
@@ -27,18 +29,21 @@ public class BookService
     private final AuthorRepository authorRepository;
     private final BookCopyRepository bookCopyRepository;
     private final ReviewRepository reviewRepository;
+    private final ReservationRepository reservationRepository;
 
     public BookService(BookRepository bookRepository,
                        CategoryRepository categoryRepository,
                        AuthorRepository authorRepository,
                        BookCopyRepository bookCopyRepository,
-                       ReviewRepository reviewRepository)
+                       ReviewRepository reviewRepository,
+                       ReservationRepository reservationRepository)
     {
         this.bookRepository = bookRepository;
         this.categoryRepository = categoryRepository;
         this.authorRepository = authorRepository;
         this.bookCopyRepository = bookCopyRepository;
         this.reviewRepository = reviewRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public List<Book> getAllBooks()
@@ -179,10 +184,13 @@ public class BookService
 
         Book book = getBookById(id);
 
-        if (book.getCopies() != null && !book.getCopies().isEmpty())
+        if (reservationRepository.findByBook(book) != null
+                && !reservationRepository.findByBook(book).isEmpty())
         {
-            throw new RuntimeException("Book cannot be deleted because it has physical copies");
+            throw new IllegalStateException("Book cannot be deleted because it has reservation history");
         }
+
+        bookCopyRepository.deleteAll(bookCopyRepository.findByBook(book));
 
         bookRepository.delete(book);
     }

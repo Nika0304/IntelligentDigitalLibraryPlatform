@@ -22,8 +22,55 @@ public class DataSeeder
     )
     {
         return args -> {
-            // Skip dacă DB-ul are deja cărți
-            if (bookRepository.count() > 0) return;
+            // Utilizatori - se verifică separat de cărți
+            Role userRole = roleRepository.findByRoleName(RoleType.USER).orElseThrow();
+            Role adminRole = roleRepository.findByRoleName(RoleType.ADMIN).orElseThrow();
+
+            if (!userRepository.existsByEmail("admin@bibliotheca.ro"))
+            {
+                userRepository.save(new User(
+                        "Administrator Bibliotecă",
+                        "admin@bibliotheca.ro",
+                        "admin123",
+                        adminRole
+                ));
+            }
+
+            if (!userRepository.existsByEmail("ana@upt.ro"))
+            {
+                userRepository.save(new User(
+                        "Ana Marinescu",
+                        "ana@upt.ro",
+                        "parola123",
+                        userRole
+                ));
+            }
+
+            if (!userRepository.existsByEmail("mihai@upt.ro"))
+            {
+                userRepository.save(new User(
+                        "Mihai Iordache",
+                        "mihai@upt.ro",
+                        "parola123",
+                        userRole
+                ));
+            }
+
+            if (!userRepository.existsByEmail("tudor@upt.ro"))
+            {
+                userRepository.save(new User(
+                        "Tudor Popescu",
+                        "tudor@upt.ro",
+                        "parola123",
+                        userRole
+                ));
+            }
+
+            // Cărți - aici oprești DOAR partea de seed pentru cărți
+            if (bookRepository.count() > 0)
+            {
+                return;
+            }
 
             // Categorii
             Category lit = categoryRepository.save(new Category("Literatură"));
@@ -45,7 +92,7 @@ public class DataSeeder
             Author eminescu = authorRepository.save(new Author("Mihai Eminescu"));
             Author cioran = authorRepository.save(new Author("Emil Cioran"));
 
-            // Cărți (cu coperti Unsplash)
+            // Cărți
             createBook(bookRepository, bookCopyRepository,
                     "Pădurea Spânzuraților", "Roman remarcabil despre dilema morală a unui ofițer.",
                     1922, true, true, "/digital/1.pdf",
@@ -104,27 +151,6 @@ public class DataSeeder
                     1934, true, true, "/digital/10.pdf",
                     "https://images.unsplash.com/photo-1519682337058-a94d519337bc?auto=format&fit=crop&w=800&q=80",
                     fil, List.of(cioran), 3);
-
-            // Utilizatori (rolurile USER & ADMIN trebuie să existe deja prin RoleSeeder)
-            Role userRole = roleRepository.findByRoleName(RoleType.USER).orElseThrow();
-            Role adminRole = roleRepository.findByRoleName(RoleType.ADMIN).orElseThrow();
-
-            if (!userRepository.existsByEmail("admin@bibliotheca.ro"))
-            {
-                userRepository.save(new User("Administrator Bibliotecă", "admin@bibliotheca.ro", "admin123", adminRole));
-            }
-            if (!userRepository.existsByEmail("ana@upt.ro"))
-            {
-                userRepository.save(new User("Ana Marinescu", "ana@upt.ro", "parola123", userRole));
-            }
-            if (!userRepository.existsByEmail("mihai@upt.ro"))
-            {
-                userRepository.save(new User("Mihai Iordache", "mihai@upt.ro", "parola123", userRole));
-            }
-            if (!userRepository.existsByEmail("tudor@upt.ro"))
-            {
-                userRepository.save(new User("Tudor Popescu", "tudor@upt.ro", "parola123", userRole));
-            }
         };
     }
 
@@ -143,6 +169,7 @@ public class DataSeeder
         b.setCoverImageURL(cover);
         b.setCategory(cat);
         b.setAuthors(authors);
+
         Book saved = br.save(b);
 
         if (physical)

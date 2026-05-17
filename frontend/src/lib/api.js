@@ -71,3 +71,21 @@ export const recordDownload = (userId, bookId) =>
 
 // Stats
 export const fetchStats = () => api.get(`/stats`).then((r) => r.data);
+
+
+export const searchGoogleBooks = (q) =>
+    api.get("/external/books", { params: { q } }).then((r) =>
+        r.data.map((book) => ({
+            ...book,
+            googleId: book.externalId,
+        }))
+    );
+
+export const fetchAllFines = () =>
+    api.get("/fines").then((r) => r.data);
+
+export const payFine = (fineId) =>
+    api.put(`/fines/${fineId}/pay`).then((r) => r.data);
+
+export const cancelFine = (fineId) =>
+    api.put(`/fines/${fineId}/cancel`).then((r) => r.data);

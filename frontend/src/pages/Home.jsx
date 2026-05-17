@@ -20,7 +20,7 @@ export default function Home() {
   }, []);
 
   const featured = books.slice(0, 8);
-  const heroImages = books.filter((b) => b.coverImageURL).slice(0, 6);
+  const heroImages = books.filter((b) => b.coverImageURL).slice(0, 9);
 
   return (
     <main className="grain" data-testid="home-page">
@@ -29,12 +29,7 @@ export default function Home() {
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-6 items-start">
           <div className="reveal">
             <span className="eyebrow" data-testid="hero-eyebrow">Bibliotecă digitală inteligentă · v2.0</span>
-            {/*<h1 className="display text-[3.2rem] sm:text-[4.5rem] lg:text-[5.6rem] mt-8" data-testid="hero-title">*/}
-            {/*  Toate <span className="italic-soft">cărțile</span>,*/}
-            {/*  <br />*/}
-            {/*  într-un singur <span className="pill-rose">raft</span>*/}
-            {/*  <span className="font-serif">.</span>*/}
-            {/*</h1>*/}
+
               <h1
                   className="font-serif-display text-[56px] sm:text-7xl lg:text-[112px] leading-[0.88] tracking-tight text-ink word-reveal mt-8"
                   data-testid="hero-title"
@@ -124,33 +119,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/*/!* Visitor card + features *!/*/}
-      {/*<section className="max-w-[1400px] mx-auto px-6 lg:px-10 mt-24" data-testid="features">*/}
-      {/*  <div className="grid lg:grid-cols-12 gap-8">*/}
-      {/*    <div className="lg:col-span-4 paper p-8">*/}
-      {/*      <div className="text-xs uppercase tracking-widest opacity-60">Pentru tine · Vizitator</div>*/}
-      {/*      <h2 className="font-serif text-3xl mt-3">Răsfoiește catalogul fără cont.</h2>*/}
-      {/*      <p className="mt-4 text-sm opacity-80">*/}
-      {/*        Descoperă peste {(stats?.totalBooks || 12000).toLocaleString("ro-RO")} de titluri, vezi recenzii și ratinguri.*/}
-      {/*        Pentru rezervări, descărcări și liste de dorințe, creează un cont gratuit.*/}
-      {/*      </p>*/}
-      {/*      <ul className="mt-5 space-y-2 text-sm opacity-90">*/}
-      {/*        <li>— Catalog complet vizibil</li>*/}
-      {/*        <li>— Detalii și recenzii cărți</li>*/}
-      {/*        <li>— Recomandări săptămânale publice</li>*/}
-      {/*      </ul>*/}
-      {/*      <Link to="/inregistrare" className="btn btn-primary mt-7" data-testid="features-cta">Creează cont <ArrowRight size={14} /></Link>*/}
-      {/*    </div>*/}
-      {/*    <div className="lg:col-span-8 grid sm:grid-cols-2 gap-5">*/}
-      {/*      <Feature icon={<Search size={18} />} title="Catalog hibrid" desc="Cărți fizice și digitale într-un singur catalog inteligent." />*/}
-      {/*      <Feature icon={<BookMarked size={18} />} title="Rezervări fizice" desc="Verificare automată a stocului și listă FIFO de așteptare." />*/}
-      {/*      <Feature icon={<Download size={18} />} title="Descărcări PDF" desc="Acces instant la versiunile digitale, cu istoric complet." />*/}
-      {/*      <Feature icon={<Sparkles size={18} />} title="Recomandări personalizate" desc="Algoritm bazat pe istoricul tău de lectură." />*/}
-      {/*      <Feature icon={<Bell size={18} />} title="Notificări inteligente" desc="Reamintiri pentru returnări și alerte de disponibilitate." />*/}
-      {/*      <Feature icon={<BarChart3 size={18} />} title="Statistici pentru bibliotecari" desc="Panou administrativ cu rapoarte și analize de utilizare." />*/}
-      {/*    </div>*/}
-      {/*  </div>*/}
-      {/*</section>*/}
         {/* Visitor card + features */}
         <section
             className="max-w-[1400px] mx-auto px-6 lg:px-10 mt-24"
@@ -251,32 +219,6 @@ export default function Home() {
             </div>
         </section>
 
-      {/*/!* Manifest *!/*/}
-      {/*<section className="max-w-[1400px] mx-auto px-6 lg:px-10 mt-24" data-testid="manifest">*/}
-      {/*  <div className="paper p-10 lg:p-14 relative overflow-hidden">*/}
-      {/*    <div className="grid lg:grid-cols-12 gap-10 items-start">*/}
-      {/*      <div className="lg:col-span-4">*/}
-      {/*        <div className="text-xs uppercase tracking-widest opacity-60">Manifest · 2025</div>*/}
-      {/*        <ul className="mt-6 space-y-2 text-sm">*/}
-      {/*          <li>— Acces fără bariere</li>*/}
-      {/*          <li>— Transparență totală</li>*/}
-      {/*          <li>— Memorie colectivă</li>*/}
-      {/*          <li>— Lectură pentru toți</li>*/}
-      {/*        </ul>*/}
-      {/*      </div>*/}
-      {/*      <div className="lg:col-span-8">*/}
-      {/*        <p className="font-serif text-3xl lg:text-4xl italic-soft leading-snug">*/}
-      {/*          „Biblioteca este templul fără ziduri al memoriei colective.”*/}
-      {/*        </p>*/}
-      {/*        <p className="mt-6 opacity-80 max-w-2xl">*/}
-      {/*          Construim o platformă unde fiecare carte — tipărită sau digitală — își găsește cititorul.*/}
-      {/*          Unde un PDF la 2 dimineața este la fel de accesibil ca un raft la lumina blândă a unei lămpi.*/}
-      {/*        </p>*/}
-      {/*      </div>*/}
-      {/*    </div>*/}
-      {/*  </div>*/}
-      {/*</section>*/}
-
         {/* Manifest */}
         <section
             className="relative bg-[var(--ink)] text-[var(--paper)] overflow-hidden mt-28"
@@ -347,26 +289,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/*/!* How it works *!/*/}
-      {/*<section className="max-w-[1400px] mx-auto px-6 lg:px-10 mt-28" data-testid="how-it-works">*/}
-      {/*  <div className="text-xs uppercase tracking-widest opacity-60">Cum funcționează</div>*/}
-      {/*  <h2 className="font-serif text-4xl lg:text-5xl mt-3 max-w-3xl">Patru pași până la <span className="italic-soft squiggle">prima pagină</span>.</h2>*/}
-      {/*  <p className="mt-3 opacity-70 max-w-xl">Fie că ești student, profesor sau cititor pasionat, platforma te ghidează firesc de la căutare la lectură.</p>*/}
-      {/*  <div className="grid md:grid-cols-4 gap-5 mt-10">*/}
-      {/*    {[*/}
-      {/*      ["01", "Caută", "În catalogul unificat, după titlu, autor sau categorie."],*/}
-      {/*      ["02", "Rezervă", "Carte fizică pentru 14 zile sau descarcă PDF instant."],*/}
-      {/*      ["03", "Primește", "Notificări inteligente despre status și disponibilitate."],*/}
-      {/*      ["04", "Descoperă", "Recomandări care îți continuă firul gândurilor."],*/}
-      {/*    ].map(([n, t, d]) => (*/}
-      {/*      <div key={n} className="paper p-6">*/}
-      {/*        <div className="font-serif text-3xl opacity-30">{n}</div>*/}
-      {/*        <h4 className="mt-2 font-serif text-xl">{t}</h4>*/}
-      {/*        <p className="mt-2 text-sm opacity-70">{d}</p>*/}
-      {/*      </div>*/}
-      {/*    ))}*/}
-      {/*  </div>*/}
-      {/*</section>*/}
 
         {/* How it works */}
         <section
@@ -563,16 +485,6 @@ function Stat({ label, value, testid }) {
   );
 }
 
-// function Feature({ icon, title, desc }) {
-//   return (
-//     <div className="paper paper-hover p-6">
-//       <div className="w-10 h-10 rounded-full bg-[var(--cream-2)] grid place-items-center">{icon}</div>
-//       <h4 className="mt-4 font-serif text-xl">{title}</h4>
-//       <p className="mt-2 text-sm opacity-70">{desc}</p>
-//     </div>
-//   );
-// }
-
 function Feature({ icon, title, desc, accent }) {
     return (
         <div className="min-h-[185px] border-b sm:border-r border-[var(--line)] p-8 lg:p-10 hover:bg-[var(--cream-2)] transition-colors">
@@ -653,35 +565,62 @@ function TestimonialCard({ quote, name, role, initial }) {
 }
 
 function HeroCollage({ images }) {
-  const positions = [
-    { top: "0%", left: "5%", rotate: -6, w: 200 },
-    { top: "8%", left: "32%", rotate: 3, w: 240 },
-    { top: "2%", right: "0%", rotate: 8, w: 200 },
-    { top: "42%", left: "0%", rotate: 4, w: 220 },
-    { top: "44%", left: "30%", rotate: -2, w: 260 },
-    { top: "48%", right: "2%", rotate: 5, w: 200 },
-  ];
-  return (
-    <div className="relative h-[560px] hidden lg:block" data-testid="hero-collage">
-      {images.map((b, i) => {
-        const p = positions[i] || positions[0];
-        return (
-          <Link
-            key={b.bookId}
-            to={`/carte/${b.bookId}`}
-            className="absolute paper paper-hover overflow-hidden p-2"
-            style={{ top: p.top, left: p.left, right: p.right, width: p.w, transform: `rotate(${p.rotate}deg)`, background: "var(--paper)" }}
-          >
-            <div className="overflow-hidden rounded">
-              <img src={b.coverImageURL} alt={b.title} className="w-full h-44 object-cover" />
-            </div>
-            <div className="mt-2 px-1 pb-1">
-              <div className="text-[10px] uppercase tracking-widest opacity-60">{b.categoryName}</div>
-              <div className="font-serif italic-soft text-sm leading-tight mt-1 truncate">{b.title}</div>
-            </div>
-          </Link>
-        );
-      })}
-    </div>
-  );
+    const positions = [
+        // rândul de sus
+        { top: "0%", left: "5%", rotate: -6, w: 200 },
+        { top: "8%", left: "32%", rotate: 3, w: 240 },
+        { top: "2%", right: "0%", rotate: 8, w: 200 },
+
+        // rândul din mijloc
+        { top: "42%", left: "0%", rotate: 4, w: 220 },
+        { top: "44%", left: "30%", rotate: -2, w: 260 },
+        { top: "48%", right: "2%", rotate: 5, w: 200 },
+
+        // rândul nou de jos
+        { top: "78%", left: "8%", rotate: -4, w: 200 },
+        { top: "82%", left: "36%", rotate: 2, w: 230 },
+        { top: "80%", right: "4%", rotate: -3, w: 200 },
+    ];
+
+    return (
+        <div className="relative h-[820px] hidden lg:block" data-testid="hero-collage">
+            {images.map((b, i) => {
+                const p = positions[i] || positions[0];
+
+                return (
+                    <Link
+                        key={b.bookId}
+                        to={`/carte/${b.bookId}`}
+                        className="absolute paper paper-hover overflow-hidden p-2"
+                        style={{
+                            top: p.top,
+                            left: p.left,
+                            right: p.right,
+                            width: p.w,
+                            transform: `rotate(${p.rotate}deg)`,
+                            background: "var(--paper)",
+                        }}
+                    >
+                        <div className="overflow-hidden rounded">
+                            <img
+                                src={b.coverImageURL}
+                                alt={b.title}
+                                className="w-full h-44 object-cover"
+                            />
+                        </div>
+
+                        <div className="mt-2 px-1 pb-1">
+                            <div className="text-[10px] uppercase tracking-widest opacity-60">
+                                {b.categoryName}
+                            </div>
+
+                            <div className="font-serif italic-soft text-sm leading-tight mt-1 truncate">
+                                {b.title}
+                            </div>
+                        </div>
+                    </Link>
+                );
+            })}
+        </div>
+    );
 }
