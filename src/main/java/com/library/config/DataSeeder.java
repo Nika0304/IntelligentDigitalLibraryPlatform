@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Configuration
@@ -20,11 +21,14 @@ public class DataSeeder
             BookCopyRepository bookCopyRepository,
             UserRepository userRepository,
             RoleRepository roleRepository,
+            FaqEntryRepository faqRepository,
+            BookGroupRepository groupRepository,
+            GroupMembershipRepository membershipRepository,
             PasswordEncoder passwordEncoder
     )
     {
         return args -> {
-            // Utilizatori - se verifică separat de cărți
+            // 1. Utilizatori
             Role userRole = roleRepository.findByRoleName(RoleType.USER).orElseThrow();
             Role adminRole = roleRepository.findByRoleName(RoleType.ADMIN).orElseThrow();
 
@@ -68,7 +72,54 @@ public class DataSeeder
                 ));
             }
 
-            // Cărți - aici oprești DOAR partea de seed pentru cărți
+            // 2. FAQ — independent de cărți
+            if (faqRepository.count() == 0)
+            {
+                faqRepository.save(new FaqEntry(
+                        "Cum rezerv o carte?",
+                        "Deschide pagina cărții, apasă „Rezervă” și ai 2 zile la dispoziție pentru ridicare.",
+                        "rezerv,rezervare,cum rezerv"));
+                faqRepository.save(new FaqEntry(
+                        "Cât timp pot împrumuta o carte?",
+                        "Perioada standard de împrumut este de 14 zile, cu posibilitatea unei prelungiri.",
+                        "imprumut,cat timp,perioada"));
+                faqRepository.save(new FaqEntry(
+                        "Cum descarc un PDF?",
+                        "Pe pagina cărții, dacă există versiune digitală, vei vedea butonul „Descarcă PDF”.",
+                        "pdf,descarc,download,digital"));
+                faqRepository.save(new FaqEntry(
+                        "Ce fac dacă nu mai sunt exemplare?",
+                        "Te înscrii automat pe lista de așteptare și primești notificare + email când se eliberează o copie.",
+                        "lista asteptare,nu mai sunt,epuizat"));
+            }
+
+            if (groupRepository.count() == 0)
+            {
+                User ana = userRepository.findByEmail("ana@upt.ro").orElseThrow();
+                User mihai = userRepository.findByEmail("mihai@upt.ro").orElseThrow();
+
+                BookGroup cerc1 = new BookGroup(
+                        "Cercul Cioran",
+                        "Filosofie",
+                        "Întâlniri săptămânale despre nihilism, tristețe și frumusețe la Cioran. Citim împreună „Pe culmile disperării”.",
+                        ana
+                );
+                cerc1.setStatus("APPROVED");
+                cerc1.setDecidedAt(LocalDateTime.now());
+                BookGroup saved1 = groupRepository.save(cerc1);
+                membershipRepository.save(new GroupMembership(saved1, ana, "MODERATOR"));
+                membershipRepository.save(new GroupMembership(saved1, mihai, "MEMBER"));
+
+                BookGroup cerc2 = new BookGroup(
+                        "Sci-fi & viitorul",
+                        "Știință",
+                        "Discutăm cum literatura SF anticipează prezentul. Începem cu Sapiens.",
+                        mihai
+                );
+                groupRepository.save(cerc2); // rămâne PENDING — pentru ca adminul să-l aprobe în demo
+            }
+
+            // 3. Cărți — doar dacă DB-ul e gol
             if (bookRepository.count() > 0)
             {
                 return;

@@ -54,7 +54,30 @@ public class SecurityConfig
                         .requestMatchers("/api/fines/**").hasRole("ADMIN")
                         .requestMatchers("/api/book-copies/**").hasRole("ADMIN")
 
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/chat/faq").permitAll()
+                        .requestMatchers("/api/chat/match").permitAll()
+                        .requestMatchers("/api/chat/questions/pending").hasRole("ADMIN")
+                        .requestMatchers("/api/chat/questions/**").authenticated()
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/chat/faq").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/chat/faq/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/chat/faq/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/groups").permitAll()
+                                // 1. Endpoint-uri publice — întâi cele specifice, apoi wildcard generic
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/groups").permitAll()
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/groups/top").permitAll()
+                                .requestMatchers("/api/groups/pending").hasRole("ADMIN")
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/groups/*").permitAll()
+
+// 2. Operațiuni admin pe un grup
+                                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/groups/*/approve").hasRole("ADMIN")
+                                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/groups/*/reject").hasRole("ADMIN")
+                                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/groups/*").hasRole("ADMIN")
+
+// 3. Restul (join, leave, vote, messages, mute) cer autentificare
+                                .requestMatchers("/api/groups/**").authenticated()
+                                .requestMatchers("/api/recommendations/**").authenticated()
+                                .requestMatchers("/api/reports/**").hasRole("ADMIN")
+                                .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

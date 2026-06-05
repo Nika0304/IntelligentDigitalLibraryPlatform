@@ -126,3 +126,52 @@ export const payFine = (fineId) =>
 
 export const cancelFine = (fineId) =>
     api.put(`/fines/${fineId}/cancel`).then((r) => r.data);
+
+
+// Chat
+export const chatFaq = () => api.get("/chat/faq").then((r) => r.data);
+export const chatMatch = (text) => api.post("/chat/match", { text }).then((r) => r.data);
+export const chatSubmit = (message) => api.post("/chat/questions", { message }).then((r) => r.data);
+export const chatMyQuestions = () => api.get("/chat/questions/me").then((r) => r.data);
+export const chatPending = () => api.get("/chat/questions/pending").then((r) => r.data);
+export const chatAnswer = (id, answer) => api.put(`/chat/questions/${id}/answer`, { answer }).then((r) => r.data);
+export const chatCreateFaq = (data) => api.post("/chat/faq", data).then((r) => r.data);
+export const chatUpdateFaq = (id, data) => api.put(`/chat/faq/${id}`, data).then((r) => r.data);
+export const chatDeleteFaq = (id) => api.delete(`/chat/faq/${id}`);
+
+
+// Cercuri de lectură
+export const fetchGroups = () => api.get("/groups").then((r) => r.data);
+export const fetchPendingGroups = () => api.get("/groups/pending").then((r) => r.data);
+export const fetchMyGroups = () => api.get("/groups/me").then((r) => r.data);
+export const fetchGroupDetails = (id) => api.get(`/groups/${id}`).then((r) => r.data);
+export const proposeGroup = (data) => api.post("/groups", data).then((r) => r.data);
+export const approveGroup = (id) => api.put(`/groups/${id}/approve`).then((r) => r.data);
+export const rejectGroup = (id) => api.put(`/groups/${id}/reject`).then((r) => r.data);
+export const archiveGroup = (id) => api.delete(`/groups/${id}`);
+export const joinGroup = (id) => api.post(`/groups/${id}/join`).then((r) => r.data);
+export const leaveGroup = (id) => api.post(`/groups/${id}/leave`).then((r) => r.data);
+export const setFeaturedBook = (id, bookId) => api.put(`/groups/${id}/featured-book`, { bookId }).then((r) => r.data);
+export const fetchGroupMessages = (id) => api.get(`/groups/${id}/messages`).then((r) => r.data);
+export const postGroupMessage = (id, content) => api.post(`/groups/${id}/messages`, { content }).then((r) => r.data);
+export const deleteGroupMessage = (mid) => api.delete(`/groups/messages/${mid}`);
+export const fetchTopGroups = () => api.get("/groups/top").then((r) => r.data);
+export const castGroupVote = (id, bookId) => api.post(`/groups/${id}/vote`, { bookId }).then((r) => r.data);
+export const fetchGroupVote = (id) => api.get(`/groups/${id}/vote`).then((r) => r.data);
+export const applyVoteWinner = (id) => api.post(`/groups/${id}/vote/apply`).then((r) => r.data);
+export const toggleGroupMute = (id) => api.post(`/groups/${id}/toggle-mute`).then((r) => r.data);
+export const fetchRecommendations = (limit = 6) =>
+    api.get(`/recommendations/me?limit=${limit}`).then((r) => r.data);
+
+// Rapoarte
+export const downloadReport = (path, filename) =>
+    api.get(`/reports/${path}`, { responseType: "blob" }).then((r) => {
+        const url = window.URL.createObjectURL(new Blob([r.data]));
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    });

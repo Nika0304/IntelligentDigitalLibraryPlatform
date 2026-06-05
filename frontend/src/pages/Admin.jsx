@@ -23,6 +23,17 @@ import {
     fetchAllFines,
     payFine,
     cancelFine,
+    chatPending,
+    chatAnswer,
+    chatFaq,
+    chatCreateFaq,
+    chatDeleteFaq,
+    fetchPendingGroups,
+    approveGroup,
+    rejectGroup,
+    archiveGroup,
+    fetchGroups as fetchAllGroups,
+    downloadReport,
 } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import {
@@ -39,6 +50,9 @@ import {
     AlertTriangle,
     Sparkles,
     Check,
+    MessageCircle,
+    Users2,
+    FileText
 } from "lucide-react";
 
 const TABS = [
@@ -49,6 +63,9 @@ const TABS = [
     { id: "reservations", label: "Rezervări", icon: BookMarked },
     { id: "fines", label: "Penalități", icon: AlertTriangle },
     { id: "taxonomy", label: "Autori & Categorii", icon: Tag },
+    { id: "chat", label: "Chat & FAQ", icon: MessageCircle },
+    { id: "groups", label: "Cercuri", icon: Users2 },
+    { id: "reports", label: "Rapoarte", icon: FileText },
 ];
 
 export default function Admin() {
@@ -101,7 +118,11 @@ export default function Admin() {
                 {active === "reservations" && <ReservationsAdmin />}
                 {active === "fines" && <FinesAdmin />}
                 {active === "taxonomy" && <Taxonomy />}
+                {active === "chat" && <ChatAdmin />}
+                {active === "groups" && <GroupsAdmin />}
+                {active === "reports" && <ReportsAdmin />}
             </div>
+
         </main>
     );
 }
@@ -1111,7 +1132,7 @@ function BooksAdmin() {
                             data-testid={`delete-book-${book.bookId}`}
                         >
                             <Trash2 size={12} />
-                        </button>npm start
+                        </button>
 
                         {showCopy === book.bookId && (
                             <div className="absolute right-0 top-16 paper p-3 z-20 flex gap-2 items-center">
@@ -1434,12 +1455,370 @@ function Taxonomy() {
     );
 }
 
+function GroupsAdmin() {
+    const [pending, setPending] = useState(null);
+    const [approved, setApproved] = useState(null);
+
+    const load = () => {
+        fetchPendingGroups().then(setPending).catch(() => setPending([]));
+        fetchAllGroups().then(setApproved).catch(() => setApproved([]));
+    };
+    useEffect(load, []);
+
+    const act = async (fn, id, confirmMsg) => {
+        if (confirmMsg && !window.confirm(confirmMsg)) return;
+        try { await fn(id); load(); }
+        catch (e) { alert(e.response?.data || "Eroare"); }
+    };
+
+    if (!pending || !approved) return <Loader />;
+
+    return (
+        <div className="grid lg:grid-cols-2 gap-6" data-testid="admin-groups-tab">
+            <section>
+                <h3 className="font-serif text-2xl mb-4">
+                    În așteptare <span className="text-base opacity-60">({pending.length})</span>
+                </h3>
+                {pending.length === 0 && (
+                    <div className="paper p-8 text-center opacity-60">Nicio propunere nouă.</div>
+                )}
+                <div className="grid gap-3">
+                    {pending.map((g) => (
+                        <div key={g.groupId} className="paper p-4" data-testid={`pending-group-${g.groupId}`}>
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                    <span className="chip chip-butter">{g.theme}</span>
+                                    <div className="font-serif text-xl mt-2">{g.name}</div>
+                                    <div className="text-xs opacity-60 mt-1">
+                                        Propus de {g.creator?.fullName} ·{" "}
+                                        {new Date(g.createdAt).toLocaleDateString("ro-RO")}
+                                    </div>
+                                    <p className="text-sm opacity-70 mt-2">{g.description}</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-2 mt-3">
+                                <button
+                                    onClick={() => act(approveGroup, g.groupId)}
+                                    className="btn btn-primary !text-xs"
+                                    data-testid={`approve-group-${g.groupId}`}
+                                >
+                                    Aprobă
+                                </button>
+                                <button
+                                    onClick={() => act(rejectGroup, g.groupId, `Respingi „${g.name}”?`)}
+                                    className="btn btn-ghost !text-xs"
+                                    data-testid={`reject-group-${g.groupId}`}
+                                >
+                                    Respinge
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section>
+                <h3 className="font-serif text-2xl mb-4">
+                    Cercuri active <span className="text-base opacity-60">({approved.length})</span>
+                </h3>
+                {approved.length === 0 && (
+                    <div className="paper p-8 text-center opacity-60">Niciun cerc activ.</div>
+                )}
+                <div className="grid gap-3">
+                    {approved.map((g) => (
+                        <div key={g.groupId} className="paper p-4" data-testid={`approved-group-${g.groupId}`}>
+                            <div className="flex justify-between items-start gap-3">
+                                <div>
+                                    <span className="chip chip-digital">{g.theme}</span>
+                                    <div className="font-serif text-lg mt-2">{g.name}</div>
+                                    <div className="text-xs opacity-60 mt-1">
+                                        {g.memberCount} membri · {g.messageCount} mesaje
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => act(archiveGroup, g.groupId, `Arhivezi „${g.name}”? Nu va mai fi vizibil.`)}
+                                    className="btn btn-ghost !text-xs"
+                                    data-testid={`archive-group-${g.groupId}`}
+                                >
+                                    Arhivează
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+        </div>
+    );
+}
+
+function ReportsAdmin() {
+    const [busy, setBusy] = useState(null);
+
+    const reports = [
+        { id: "summary", title: "Raport sumar (PDF)", desc: "Statistici generale + ultimele rezervări. Format PDF tipăribil.", path: "summary.pdf", filename: "bibliotheca-sumar.pdf", color: "var(--butter)" },
+        { id: "users", title: "Utilizatori (CSV)", desc: "Listă completă cu nume, email, rol și status.", path: "users.csv", filename: "bibliotheca-utilizatori.csv" },
+        { id: "reservations", title: "Rezervări (CSV)", desc: "Toate rezervările cu utilizator, carte și status.", path: "reservations.csv", filename: "bibliotheca-rezervari.csv" },
+        { id: "downloads", title: "Descărcări (CSV)", desc: "Istoric complet al descărcărilor de PDF-uri.", path: "downloads.csv", filename: "bibliotheca-descarcari.csv" },
+        { id: "fines", title: "Penalități (CSV)", desc: "Penalități emise, plătite și sume neîncasate.", path: "fines.csv", filename: "bibliotheca-penalitati.csv" },
+    ];
+
+    const download = async (r) => {
+        setBusy(r.id);
+        try { await downloadReport(r.path, r.filename); }
+        catch (e) { alert(e.response?.data || "Nu s-a putut descărca raportul."); }
+        finally { setBusy(null); }
+    };
+
+    return (
+        <div data-testid="admin-reports-tab">
+            <div className="paper p-6 mb-6">
+                <h3 className="font-serif text-2xl">Exportă date pentru analiză sau arhivare</h3>
+                <p className="mt-2 text-sm opacity-70">
+                    Rapoartele CSV se deschid în Excel sau Google Sheets cu diacritice corecte (UTF-8).
+                    Raportul PDF e gata de printat.
+                </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {reports.map((r) => (
+                    <div
+                        key={r.id}
+                        className="paper p-5 flex flex-col"
+                        style={r.color ? { background: r.color } : {}}
+                        data-testid={`report-card-${r.id}`}
+                    >
+                        <div className="flex items-center gap-2">
+                            <FileText size={16} />
+                            <h4 className="font-serif text-lg">{r.title}</h4>
+                        </div>
+                        <p className="text-sm opacity-70 mt-2 flex-1">{r.desc}</p>
+                        <button
+                            onClick={() => download(r)}
+                            disabled={busy === r.id}
+                            className="btn btn-primary !text-sm mt-4 justify-center"
+                            data-testid={`download-report-${r.id}`}
+                        >
+                            {busy === r.id ? (
+                                <Loader2 size={12} className="animate-spin" />
+                            ) : (
+                                <Download size={12} />
+                            )}
+                            Descarcă
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
 // ===== Loader =====
 
 function Loader() {
     return (
         <div className="text-center opacity-60 py-10">
             <Loader2 className="animate-spin inline" />
+        </div>
+    );
+}
+
+// ===== Chat & FAQ Admin =====
+
+function ChatAdmin() {
+    const [pending, setPending] = useState(null);
+    const [faqs, setFaqs] = useState(null);
+    const [newFaq, setNewFaq] = useState({ question: "", answer: "", keywords: "" });
+    const [replies, setReplies] = useState({});
+
+    const load = () => {
+        chatPending().then(setPending).catch(() => setPending([]));
+        chatFaq().then(setFaqs).catch(() => setFaqs([]));
+    };
+
+    useEffect(() => {
+        load();
+    }, []);
+
+    const sendAnswer = async (questionId) => {
+        const text = replies[questionId]?.trim();
+
+        if (!text) {
+            alert("Scrie un răspuns înainte de a trimite.");
+            return;
+        }
+
+        try {
+            await chatAnswer(questionId, text);
+            setReplies({ ...replies, [questionId]: "" });
+            load();
+        } catch (e) {
+            alert(e.response?.data || e.response?.data?.detail || "Eroare la trimiterea răspunsului.");
+        }
+    };
+
+    const addFaq = async (e) => {
+        e.preventDefault();
+
+        if (!newFaq.question.trim() || !newFaq.answer.trim() || !newFaq.keywords.trim()) {
+            alert("Completează toate câmpurile FAQ-ului.");
+            return;
+        }
+
+        try {
+            await chatCreateFaq(newFaq);
+            setNewFaq({ question: "", answer: "", keywords: "" });
+            load();
+        } catch (err) {
+            alert(err.response?.data || err.response?.data?.detail || "Eroare la adăugarea FAQ-ului.");
+        }
+    };
+
+    const removeFaq = async (faqId, question) => {
+        if (!window.confirm(`Ștergi FAQ-ul "${question}"?`)) return;
+
+        try {
+            await chatDeleteFaq(faqId);
+            load();
+        } catch (e) {
+            alert(e.response?.data || "Eroare la ștergere.");
+        }
+    };
+
+    if (!pending || !faqs) return <Loader />;
+
+    return (
+        <div className="grid lg:grid-cols-2 gap-6" data-testid="admin-chat-tab">
+            <section data-testid="admin-pending-questions">
+                <h3 className="font-serif text-2xl mb-4">
+                    Întrebări în așteptare{" "}
+                    <span className="text-base opacity-60">({pending.length})</span>
+                </h3>
+
+                {pending.length === 0 && (
+                    <div className="paper p-8 text-center opacity-60">
+                        Nicio întrebare deschisă din partea utilizatorilor.
+                    </div>
+                )}
+
+                <div className="grid gap-3">
+                    {pending.map((q) => (
+                        <div
+                            key={q.questionId}
+                            className="paper p-4"
+                            data-testid={`pending-question-${q.questionId}`}
+                        >
+                            <div className="text-xs uppercase tracking-widest opacity-60">
+                                {q.user?.fullName || q.user?.email || "Utilizator necunoscut"}
+                                {" · "}
+                                {q.createdAt
+                                    ? new Date(q.createdAt).toLocaleString("ro-RO")
+                                    : "—"}
+                            </div>
+
+                            <p className="font-serif text-lg mt-2 italic-soft">
+                                „{q.message}”
+                            </p>
+
+                            <textarea
+                                rows={3}
+                                className="input-cream mt-3"
+                                placeholder="Scrie răspunsul aici..."
+                                value={replies[q.questionId] || ""}
+                                onChange={(e) =>
+                                    setReplies({ ...replies, [q.questionId]: e.target.value })
+                                }
+                                data-testid={`reply-input-${q.questionId}`}
+                            />
+
+                            <button
+                                onClick={() => sendAnswer(q.questionId)}
+                                className="btn btn-primary !text-sm mt-3"
+                                data-testid={`reply-send-${q.questionId}`}
+                            >
+                                <Check size={12} /> Trimite răspunsul
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
+            <section data-testid="admin-faq-section">
+                <h3 className="font-serif text-2xl mb-4">
+                    FAQ <span className="text-base opacity-60">({faqs.length})</span>
+                </h3>
+
+                <form
+                    onSubmit={addFaq}
+                    className="paper p-5 space-y-3 mb-5"
+                    data-testid="admin-faq-form"
+                >
+                    <h4 className="font-serif text-lg">Adaugă întrebare nouă</h4>
+
+                    <input
+                        className="input-cream"
+                        placeholder="Întrebarea (ex: Cum rezerv o carte?)"
+                        value={newFaq.question}
+                        onChange={(e) =>
+                            setNewFaq({ ...newFaq, question: e.target.value })
+                        }
+                        data-testid="faq-question-input"
+                    />
+
+                    <textarea
+                        rows={3}
+                        className="input-cream"
+                        placeholder="Răspunsul afișat utilizatorului"
+                        value={newFaq.answer}
+                        onChange={(e) =>
+                            setNewFaq({ ...newFaq, answer: e.target.value })
+                        }
+                        data-testid="faq-answer-input"
+                    />
+
+                    <input
+                        className="input-cream"
+                        placeholder="Cuvinte cheie (separate prin virgulă, fără diacritice)"
+                        value={newFaq.keywords}
+                        onChange={(e) =>
+                            setNewFaq({ ...newFaq, keywords: e.target.value })
+                        }
+                        data-testid="faq-keywords-input"
+                    />
+
+                    <button
+                        type="submit"
+                        className="btn btn-primary w-full justify-center"
+                        data-testid="faq-add-button"
+                    >
+                        <Plus size={14} /> Adaugă FAQ
+                    </button>
+                </form>
+
+                <div className="grid gap-2">
+                    {faqs.map((f) => (
+                        <div
+                            key={f.faqId}
+                            className="paper p-4 flex items-start justify-between gap-3"
+                            data-testid={`faq-item-${f.faqId}`}
+                        >
+                            <div className="min-w-0 flex-1">
+                                <div className="font-serif">{f.question}</div>
+                                <div className="text-sm opacity-70 mt-1">{f.answer}</div>
+                                <div className="text-xs opacity-50 mt-2">
+                                    Cuvinte cheie: {f.keywords}
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => removeFaq(f.faqId, f.question)}
+                                className="btn btn-ghost !text-xs !p-2"
+                                data-testid={`faq-delete-${f.faqId}`}
+                            >
+                                <Trash2 size={12} />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            </section>
         </div>
     );
 }

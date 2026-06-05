@@ -11,6 +11,9 @@ import Profile from "./pages/Profile";
 import Admin from "./pages/Admin";
 import { AuthProvider } from "./context/AuthContext";
 import "./App.css";
+import ChatWidget from "./components/ChatWidget";
+import Groups from "./pages/Groups";
+import GroupDetail from "./pages/GroupDetail";
 
 export default function App() {
   return (
@@ -26,8 +29,12 @@ export default function App() {
             <Route path="/inregistrare" element={<Register />} />
             <Route path="/profil" element={<Profile />} />
             <Route path="/admin" element={<Admin />} />
+              <Route path="/cercuri" element={<Groups />} />
+              <Route path="/cercuri/:id" element={<GroupDetail />} />
+
             <Route path="*" element={<Home />} />
           </Routes>
+            <ChatWidget />
           <Footer />
         </div>
       </BrowserRouter>

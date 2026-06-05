@@ -36,7 +36,13 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-1 text-sm">
           <NavLink to="/" end className={({isActive}) => `tab-link ${isActive ? "active" : ""}`} data-testid="nav-home">Acasă</NavLink>
           <NavLink to="/catalog" className={({isActive}) => `tab-link ${isActive ? "active" : ""}`} data-testid="nav-catalog">Catalog</NavLink>
-          {user && <NavLink to="/profil" className={({isActive}) => `tab-link ${isActive ? "active" : ""}`} data-testid="nav-profile">Profil</NavLink>}
+            <NavLink
+                to="/cercuri"
+                className={({isActive}) => `tab-link ${isActive ? "active" : ""}`}
+                data-testid="nav-groups">
+                Cercuri
+            </NavLink>
+            {user && <NavLink to="/profil" className={({isActive}) => `tab-link ${isActive ? "active" : ""}`} data-testid="nav-profile">Profil</NavLink>}
           {isAdmin && <NavLink to="/admin" className={({isActive}) => `tab-link ${isActive ? "active" : ""}`} data-testid="nav-admin">Admin</NavLink>}
         </nav>
 

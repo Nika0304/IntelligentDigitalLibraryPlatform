@@ -4,6 +4,8 @@ import { ArrowRight, Search, BookMarked, Download, Sparkles, Bell, BarChart3, Qu
 import BookCard from "../components/BookCard";
 import { fetchBooks, fetchStats } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import { fetchTopGroups } from "../lib/api";
+import { Users2, MessageCircle } from "lucide-react";
 
 const AUTHORS = [
   "Liviu Rebreanu", "Marin Preda", "Aristotel", "Stephen Hawking", "Mircea Eliade",
@@ -15,6 +17,9 @@ export default function Home() {
     const { user } = useAuth();
     const [books, setBooks] = useState([]);
     const [stats, setStats] = useState(null);
+
+    const [topGroups, setTopGroups] = useState([]);
+    useEffect(() => { fetchTopGroups().then(setTopGroups).catch(() => {}); }, []);
 
   useEffect(() => {
     fetchBooks().then(setBooks).catch(() => {});
@@ -397,6 +402,30 @@ export default function Home() {
             </div>
         </section>
 
+        {topGroups.length > 0 && (
+            <section className="max-w-[1400px] mx-auto px-6 lg:px-10 mt-24" data-testid="home-top-groups">
+                <div className="flex items-end justify-between flex-wrap gap-4 mb-8">
+                    <div>
+                        <div className="text-xs uppercase tracking-widest opacity-60">Cercuri vii</div>
+                        <h2 className="font-serif text-4xl lg:text-5xl mt-2">Citește <span className="italic-soft">împreună</span>.</h2>
+                    </div>
+                    <Link to="/cercuri" className="btn btn-ghost !text-sm">Toate cercurile →</Link>
+                </div>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {topGroups.map((g) => (
+                        <Link key={g.groupId} to={`/cercuri/${g.groupId}`} className="paper paper-hover p-5" data-testid={`home-group-${g.groupId}`}>
+                            <span className="chip chip-physical">{g.theme}</span>
+                            <h3 className="font-serif text-2xl mt-3 leading-tight">{g.name}</h3>
+                            <p className="mt-2 text-sm opacity-70 line-clamp-2">{g.description}</p>
+                            <div className="flex items-center gap-4 text-xs opacity-60 mt-4">
+                                <span className="inline-flex items-center gap-1"><Users2 size={12} /> {g.memberCount}</span>
+                                <span className="inline-flex items-center gap-1"><MessageCircle size={12} /> {g.messageCount}</span>
+                            </div>
+                        </Link>
+                    ))}
+                </div>
+            </section>
+        )}
 
         {/* CTA */}
         {/* CTA */}

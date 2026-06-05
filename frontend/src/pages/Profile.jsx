@@ -6,6 +6,7 @@ import {
   markNotificationRead, markAllRead, fetchWishlist, fetchDownloads, removeFromWishlist
 } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
+import Recommendations from "../components/Recommendations";
 
 const TABS = [
   { id: "rezervari", label: "Rezervări", icon: BookMarked },
@@ -51,6 +52,7 @@ export default function Profile() {
         {active === "wishlist" && <Wishlist userId={user.userId} />}
         {active === "notificari" && <Notifications userId={user.userId} />}
       </div>
+        <Recommendations limit={6} />
     </main>
   );
 }
