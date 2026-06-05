@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
 public class UserService
@@ -19,11 +20,15 @@ public class UserService
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository)
+    public UserService(UserRepository userRepository,
+                       RoleRepository roleRepository,
+                       PasswordEncoder passwordEncoder)
     {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<UserResponse> getAllUsers()
@@ -73,8 +78,7 @@ public class UserService
         User user = new User();
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
-        user.setRole(role);
+        user.setPassword(passwordEncoder.encode(request.getPassword()));        user.setRole(role);
         user.setStatus(UserStatus.ACTIVE);
 
         User savedUser = userRepository.save(user);
@@ -103,7 +107,7 @@ public class UserService
 
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty())
         {
-            user.setPassword(request.getPassword());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         if (request.getRoleId() != null)

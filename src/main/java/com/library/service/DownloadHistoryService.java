@@ -1,6 +1,6 @@
 package com.library.service;
 
-import com.library.dto.DownloadRequest;
+import com.library.dto.DownloadHistoryResponse;
 import com.library.model.Book;
 import com.library.model.DownloadHistory;
 import com.library.model.User;
@@ -18,59 +18,63 @@ public class DownloadHistoryService
     private final DownloadHistoryRepository downloadRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+    private final BookService bookService;
 
     public DownloadHistoryService(DownloadHistoryRepository downloadRepository,
                                   UserRepository userRepository,
-                                  BookRepository bookRepository)
+                                  BookRepository bookRepository,
+                                  BookService bookService)
     {
         this.downloadRepository = downloadRepository;
         this.userRepository = userRepository;
         this.bookRepository = bookRepository;
+        this.bookService = bookService;
     }
 
     @Transactional(readOnly = true)
-    public List<DownloadHistory> getAllDownloads()
+    public List<DownloadHistoryResponse> getAllDownloads()
     {
-        return downloadRepository.findAll();
+        return downloadRepository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<DownloadHistory> getUserDownloads(Long userId)
+    public List<DownloadHistoryResponse> getUserDownloads(Long userId)
     {
         User user = getUserById(userId);
 
-        return downloadRepository.findByUserOrderByDownloadDateDesc(user);
+        return downloadRepository.findByUserOrderByDownloadDateDesc(user)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<DownloadHistory> getBookDownloads(Long bookId)
+    public List<DownloadHistoryResponse> getBookDownloads(Long bookId)
     {
         Book book = getBookById(bookId);
 
-        return downloadRepository.findByBookOrderByDownloadDateDesc(book);
+        return downloadRepository.findByBookOrderByDownloadDateDesc(book)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional
-    public DownloadHistory recordDownload(DownloadRequest request)
+    public DownloadHistory saveDownload(DownloadHistory entry)
     {
-        validateDownloadRequest(request);
+        return downloadRepository.save(entry);
+    }
 
-        User user = getUserById(request.getUserId());
-        Book book = getBookById(request.getBookId());
-
-        if (!book.isHasDigitalCopy())
-        {
-            throw new IllegalStateException("Book does not have a digital copy");
-        }
-
-        if (book.getDigitalFilePath() == null || book.getDigitalFilePath().trim().isEmpty())
-        {
-            throw new IllegalStateException("Book digital file path is missing");
-        }
-
-        DownloadHistory downloadHistory = new DownloadHistory(user, book);
-
-        return downloadRepository.save(downloadHistory);
+    public DownloadHistoryResponse toResponse(DownloadHistory d)
+    {
+        return new DownloadHistoryResponse(
+                d.getDownloadId(),
+                d.getDownloadDate(),
+                bookService.toResponse(d.getBook())
+        );
     }
 
     private User getUserById(Long userId)
@@ -88,18 +92,6 @@ public class DownloadHistoryService
         return bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found with id: " + bookId));
     }
-
-    private void validateDownloadRequest(DownloadRequest request)
-    {
-        if (request == null)
-        {
-            throw new IllegalArgumentException("Download request is required");
-        }
-
-        validateId(request.getUserId(), "User id");
-        validateId(request.getBookId(), "Book id");
-    }
-
     private void validateId(Long id, String fieldName)
     {
         if (id == null)

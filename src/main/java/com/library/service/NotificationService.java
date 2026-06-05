@@ -16,11 +16,15 @@ public class NotificationService
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final EmailService emailService;
 
-    public NotificationService(NotificationRepository notificationRepository, UserRepository userRepository)
+    public NotificationService(NotificationRepository notificationRepository,
+                               UserRepository userRepository,
+                               EmailService emailService)
     {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
+        this.emailService = emailService;
     }
 
     public List<Notification> getAllNotifications()
@@ -87,7 +91,9 @@ public class NotificationService
         notification.setType(request.getType());
         notification.setRead(false);
 
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        emailService.sendNotificationEmail(saved);
+        return saved;
     }
 
     public Notification markAsRead(Long notificationId)
@@ -141,7 +147,9 @@ public class NotificationService
         notification.setType(type);
         notification.setRead(false);
 
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        emailService.sendNotificationEmail(saved);
+        return saved;
     }
 
     public Notification createAutomaticNotification(User user, String message, NotificationType type)
@@ -160,7 +168,9 @@ public class NotificationService
         notification.setType(type);
         notification.setRead(false);
 
-        return notificationRepository.save(notification);
+        Notification saved = notificationRepository.save(notification);
+        emailService.sendNotificationEmail(saved);
+        return saved;
     }
 
     private User getUserOrThrow(Long userId)

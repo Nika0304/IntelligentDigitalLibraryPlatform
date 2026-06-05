@@ -7,6 +7,19 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.library.model.Book;
+import com.library.service.PdfGeneratorService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import com.library.model.User;
+import com.library.repository.UserRepository;
+import com.library.service.DownloadHistoryService;
+import com.library.model.DownloadHistory;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.util.List;
 
 @RestController
@@ -14,10 +27,59 @@ import java.util.List;
 public class BookController
 {
     private final BookService bookService;
+    private final PdfGeneratorService pdfGeneratorService;
+    private final DownloadHistoryService downloadHistoryService;
+    private final UserRepository userRepository;
 
-    public BookController(BookService bookService)
+    public BookController(BookService bookService,
+                          PdfGeneratorService pdfGeneratorService,
+                          DownloadHistoryService downloadHistoryService,
+                          UserRepository userRepository)
     {
         this.bookService = bookService;
+        this.pdfGeneratorService = pdfGeneratorService;
+        this.downloadHistoryService = downloadHistoryService;
+        this.userRepository = userRepository;
+    }
+
+    @GetMapping("/{id}/download")
+    public ResponseEntity<?> downloadBookPdf(@PathVariable Long id)
+    {
+        try
+        {
+            Book book = bookService.getBookById(id);
+
+            if (!book.isHasDigitalCopy())
+            {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body("Cartea nu are versiune digitală disponibilă.");
+            }
+
+            String email = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+            User currentUser = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            DownloadHistory record = new DownloadHistory(currentUser, book);
+            downloadHistoryService.saveDownload(record);
+
+            byte[] pdfBytes = pdfGeneratorService.generateBookPdf(book);
+
+            String safeTitle = book.getTitle() == null ? "book" : book.getTitle();
+            String filename = URLEncoder.encode(safeTitle, StandardCharsets.UTF_8)
+                    .replace("+", "%20") + ".pdf";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.add(HttpHeaders.CONTENT_DISPOSITION,
+                    "attachment; filename*=UTF-8''" + filename);
+            headers.setContentLength(pdfBytes.length);
+
+            return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
     }
 
     @GetMapping

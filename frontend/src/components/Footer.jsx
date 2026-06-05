@@ -1,8 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { BookOpen } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 export default function Footer() {
+    const { user } = useAuth();
   return (
     <footer className="mt-32 relative z-10" data-testid="site-footer">
       <div className="max-w-[1400px] mx-auto px-6 lg:px-10 py-12">
@@ -20,11 +22,15 @@ export default function Footer() {
           </div>
           <div>
             <h4 className="text-sm uppercase tracking-widest opacity-60 mb-3">Catalog</h4>
-            <ul className="space-y-2 text-sm">
-              <li><Link to="/catalog" className="hover:underline">Toate cărțile</Link></li>
-              <li><Link to="/catalog?type=digital" className="hover:underline">Doar PDF</Link></li>
-              <li><Link to="/catalog?type=physical" className="hover:underline">Doar fizic</Link></li>
-            </ul>
+              <ul className="space-y-2 text-sm">
+                  {!user && (
+                      <>
+                          <li><Link to="/autentificare" className="hover:underline">Autentificare</Link></li>
+                          <li><Link to="/inregistrare" className="hover:underline">Înregistrare</Link></li>
+                      </>
+                  )}
+                  <li><Link to="/profil" className="hover:underline">Profil</Link></li>
+              </ul>
           </div>
           <div>
             <h4 className="text-sm uppercase tracking-widest opacity-60 mb-3">Cont</h4>

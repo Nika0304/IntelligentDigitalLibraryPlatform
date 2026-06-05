@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { Star, BookMarked, Download, Heart, ArrowLeft, Loader2 } from "lucide-react";
 import {
   fetchBook, fetchReviewsByBook, fetchCopiesByBook, createReservation,
-  createReview, recordDownload, addToWishlist
+    createReview, recordDownload, addToWishlist, downloadDigitalBook
 } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 
@@ -44,16 +44,22 @@ export default function BookDetail() {
     } finally { setBusy(false); }
   };
 
-  const onDownload = async () => {
-    if (!user) return nav("/autentificare");
-    setBusy(true);
-    try {
-      await recordDownload(user.userId, Number(id));
-      flash("ok", "Descărcare înregistrată. Poți regăsi cartea în Istoric descărcări.");
-    } catch (e) {
-      flash("err", "Nu s-a putut înregistra descărcarea.");
-    } finally { setBusy(false); }
-  };
+    const onDownload = async () => {
+        if (!user) return nav("/autentificare");
+
+        setBusy(true);
+
+        try {
+            await downloadDigitalBook(Number(id), book.title);
+
+
+            flash("ok", "PDF descărcat cu succes. Cartea apare și în istoricul descărcărilor.");
+        } catch (e) {
+            flash("err", "Nu s-a putut descărca PDF-ul.");
+        } finally {
+            setBusy(false);
+        }
+    };
 
   const onWishlist = async () => {
     if (!user) return nav("/autentificare");

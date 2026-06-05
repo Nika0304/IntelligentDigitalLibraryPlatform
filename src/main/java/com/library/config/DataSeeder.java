@@ -5,6 +5,7 @@ import com.library.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -18,7 +19,8 @@ public class DataSeeder
             CategoryRepository categoryRepository,
             BookCopyRepository bookCopyRepository,
             UserRepository userRepository,
-            RoleRepository roleRepository
+            RoleRepository roleRepository,
+            PasswordEncoder passwordEncoder
     )
     {
         return args -> {
@@ -31,7 +33,7 @@ public class DataSeeder
                 userRepository.save(new User(
                         "Administrator Bibliotecă",
                         "admin@bibliotheca.ro",
-                        "admin123",
+                        passwordEncoder.encode("admin123"),
                         adminRole
                 ));
             }
@@ -41,7 +43,7 @@ public class DataSeeder
                 userRepository.save(new User(
                         "Ana Marinescu",
                         "ana@upt.ro",
-                        "parola123",
+                        passwordEncoder.encode("parola123"),
                         userRole
                 ));
             }
@@ -51,7 +53,7 @@ public class DataSeeder
                 userRepository.save(new User(
                         "Mihai Iordache",
                         "mihai@upt.ro",
-                        "parola123",
+                        passwordEncoder.encode("parola123"),
                         userRole
                 ));
             }
@@ -61,7 +63,7 @@ public class DataSeeder
                 userRepository.save(new User(
                         "Tudor Popescu",
                         "tudor@upt.ro",
-                        "parola123",
+                        passwordEncoder.encode("parola123"),
                         userRole
                 ));
             }

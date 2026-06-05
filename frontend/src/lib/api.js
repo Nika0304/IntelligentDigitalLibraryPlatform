@@ -3,6 +3,20 @@ import axios from "axios";
 const BASE = process.env.REACT_APP_BACKEND_URL;
 export const api = axios.create({ baseURL: `${BASE}/api`, headers: { "Content-Type": "application/json" } });
 
+api.interceptors.request.use((config) => {
+    const raw = localStorage.getItem("bibliotheca_user");
+
+    if (raw) {
+        const user = JSON.parse(raw);
+
+        if (user.token) {
+            config.headers.Authorization = `Bearer ${user.token}`;
+        }
+    }
+
+    return config;
+});
+
 // Books
 export const fetchBooks = () => api.get("/books").then((r) => r.data);
 export const fetchBook = (id) => api.get(`/books/${id}`).then((r) => r.data);
@@ -68,6 +82,29 @@ export const removeFromWishlist = (userId, bookId) =>
 export const fetchDownloads = (uid) => api.get(`/downloads/user/${uid}`).then((r) => r.data);
 export const recordDownload = (userId, bookId) =>
   api.post(`/downloads`, { userId, bookId }).then((r) => r.data);
+
+export const downloadDigitalBook = async (bookId, title = "book") => {
+    const response = await api.get(`/books/${bookId}/download`, {
+        responseType: "blob",
+    });
+
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    const safeTitle = title
+        .replace(/[^a-zA-Z0-9ăâîșțĂÂÎȘȚ -]/g, "")
+        .replaceAll(" ", "_");
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${safeTitle || "book"}.pdf`;
+
+    document.body.appendChild(link);
+    link.click();
+
+    link.remove();
+    window.URL.revokeObjectURL(url);
+};
 
 // Stats
 export const fetchStats = () => api.get(`/stats`).then((r) => r.data);

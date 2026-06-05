@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, Search, BookMarked, Download, Sparkles, Bell, BarChart3, Quote } from "lucide-react";
 import BookCard from "../components/BookCard";
 import { fetchBooks, fetchStats } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 
 const AUTHORS = [
   "Liviu Rebreanu", "Marin Preda", "Aristotel", "Stephen Hawking", "Mircea Eliade",
@@ -11,8 +12,9 @@ const AUTHORS = [
 ];
 
 export default function Home() {
-  const [books, setBooks] = useState([]);
-  const [stats, setStats] = useState(null);
+    const { user } = useAuth();
+    const [books, setBooks] = useState([]);
+    const [stats, setStats] = useState(null);
 
   useEffect(() => {
     fetchBooks().then(setBooks).catch(() => {});
@@ -92,9 +94,11 @@ export default function Home() {
               <Link to="/catalog" className="btn btn-primary" data-testid="hero-cta-catalog">
                 Explorează catalogul <ArrowRight size={16} />
               </Link>
-              <Link to="/inregistrare" className="btn btn-secondary" data-testid="hero-cta-register">
-                Creează un cont
-              </Link>
+                {!user && (
+                    <Link to="/inregistrare" className="btn btn-secondary" data-testid="hero-cta-register">
+                        Creează un cont
+                    </Link>
+                )}
             </div>
 
             <div className="mt-16 grid grid-cols-3 max-w-md gap-4">
@@ -162,11 +166,11 @@ export default function Home() {
                     </ul>
 
                     <Link
-                        to="/inregistrare"
+                        to={user ? "/catalog" : "/inregistrare"}
                         className="inline-flex items-center gap-3 mt-11 bg-[var(--ink)] text-[var(--paper)] px-7 py-4 rounded-none text-sm font-medium hover:opacity-90 transition"
                         data-testid="features-cta"
                     >
-                        Creează cont <ArrowRight size={16} />
+                        {user ? "Vezi catalogul" : "Creează cont"} <ArrowRight size={16} />
                     </Link>
                 </div>
 
@@ -429,8 +433,19 @@ export default function Home() {
                             color: "#f7f1e7",
                         }}
                     >
-                        Pregătit să-ți deschizi propriul
-                        <br />
+                        {user ? (
+                            <>
+                                Bine ai revenit,
+                                <br />
+                                <em className="italic font-normal">{user.fullName?.split(" ")[0]}</em>.
+                            </>
+                        ) : (
+                            <>
+                                Pregătit să-ți deschizi propriul
+                                <br />
+                                raft digital?
+                            </>
+                        )}
                         raft digital?
                     </h2>
 
@@ -440,23 +455,46 @@ export default function Home() {
                             color: "rgba(247, 241, 231, 0.7)",
                         }}
                     >
-                        Creează un cont gratuit și începe să rezervi, să descarci și să primești
-                        recomandări personalizate.
+                        {user
+                            ? "Raftul tău digital te așteaptă. Reia o lectură, verifică rezervările sau descoperă ce e nou în catalog."
+                            : "Creează un cont gratuit și începe să rezervi, să descarci și să primești recomandări personalizate."}
                     </p>
                 </div>
 
                 <div className="lg:col-span-4 flex flex-wrap gap-4 relative lg:justify-end">
-                    <Link
-                        to="/inregistrare"
-                        className="inline-flex items-center gap-3 px-8 py-4 text-sm lg:text-base font-medium rounded-full transition hover:opacity-90"
-                        style={{
-                            background: "#f7f1e7",
-                            color: "#171717",
-                        }}
-                        data-testid="bottom-cta-register"
-                    >
-                        Creare cont <ArrowRight size={16} />
-                    </Link>
+                    {!user && (
+                        <Link
+                            to="/inregistrare"
+                            className="inline-flex items-center gap-3 px-8 py-4 ..."
+                            data-testid="bottom-cta-register"
+                        >
+                            {user ? (
+                                <Link
+                                    to="/profil"
+                                    className="inline-flex items-center gap-3 px-8 py-4 text-sm lg:text-base font-medium rounded-full transition hover:opacity-90"
+                                    style={{
+                                        background: "#f7f1e7",
+                                        color: "#171717",
+                                    }}
+                                    data-testid="bottom-cta-profile"
+                                >
+                                    Mergi la profil <ArrowRight size={16} />
+                                </Link>
+                            ) : (
+                                <Link
+                                    to="/inregistrare"
+                                    className="inline-flex items-center gap-3 px-8 py-4 text-sm lg:text-base font-medium rounded-full transition hover:opacity-90"
+                                    style={{
+                                        background: "#f7f1e7",
+                                        color: "#171717",
+                                    }}
+                                    data-testid="bottom-cta-register"
+                                >
+                                    Creare cont <ArrowRight size={16} />
+                                </Link>
+                            )}
+                        </Link>
+                    )}
 
                     <Link
                         to="/catalog"

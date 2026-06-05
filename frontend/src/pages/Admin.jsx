@@ -1111,7 +1111,7 @@ function BooksAdmin() {
                             data-testid={`delete-book-${book.bookId}`}
                         >
                             <Trash2 size={12} />
-                        </button>
+                        </button>npm start
 
                         {showCopy === book.bookId && (
                             <div className="absolute right-0 top-16 paper p-3 z-20 flex gap-2 items-center">

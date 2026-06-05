@@ -1,7 +1,6 @@
 package com.library.controller;
 
-import com.library.dto.DownloadRequest;
-import com.library.model.DownloadHistory;
+import com.library.dto.DownloadHistoryResponse;
 import com.library.service.DownloadHistoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +24,7 @@ public class DownloadHistoryController
     {
         try
         {
-            List<DownloadHistory> downloads = downloadHistoryService.getAllDownloads();
-
+            List<DownloadHistoryResponse> downloads = downloadHistoryService.getAllDownloads();
             return ResponseEntity.ok(downloads);
         }
         catch (Exception e)
@@ -40,8 +38,7 @@ public class DownloadHistoryController
     {
         try
         {
-            List<DownloadHistory> downloads = downloadHistoryService.getUserDownloads(userId);
-
+            List<DownloadHistoryResponse> downloads = downloadHistoryService.getUserDownloads(userId);
             return ResponseEntity.ok(downloads);
         }
         catch (IllegalArgumentException e)
@@ -63,40 +60,12 @@ public class DownloadHistoryController
     {
         try
         {
-            List<DownloadHistory> downloads = downloadHistoryService.getBookDownloads(bookId);
-
+            List<DownloadHistoryResponse> downloads = downloadHistoryService.getBookDownloads(bookId);
             return ResponseEntity.ok(downloads);
         }
         catch (IllegalArgumentException e)
         {
             return handleBadRequestException(e);
-        }
-        catch (RuntimeException e)
-        {
-            return handleNotFoundException(e);
-        }
-        catch (Exception e)
-        {
-            return handleGenericException(e);
-        }
-    }
-
-    @PostMapping
-    public ResponseEntity<?> recordDownload(@RequestBody DownloadRequest request)
-    {
-        try
-        {
-            DownloadHistory createdDownload = downloadHistoryService.recordDownload(request);
-
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdDownload);
-        }
-        catch (IllegalArgumentException e)
-        {
-            return handleBadRequestException(e);
-        }
-        catch (IllegalStateException e)
-        {
-            return handleConflictException(e);
         }
         catch (RuntimeException e)
         {
@@ -116,11 +85,6 @@ public class DownloadHistoryController
     private ResponseEntity<String> handleNotFoundException(Exception e)
     {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-    }
-
-    private ResponseEntity<String> handleConflictException(Exception e)
-    {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
     }
 
     private ResponseEntity<String> handleGenericException(Exception e)

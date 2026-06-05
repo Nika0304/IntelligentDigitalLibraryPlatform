@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { Bell, BookMarked, Download, Heart, Check, X, Loader2 } from "lucide-react";
 import {
@@ -70,76 +70,99 @@ function StatusChip({ status }) {
   return <span className={`chip ${cls}`}>{label}</span>;
 }
 
+    function bookInfo(b) {
+        if (!b) return { id: undefined, title: "", cover: "", category: "", authors: "" };
+        const authorsList = Array.isArray(b.authors)
+            ? b.authors.map((a) => (typeof a === "string" ? a : a?.name)).filter(Boolean)
+            : [];
+        return {
+            id: b.bookId,
+            title: b.title,
+            cover: b.coverImageURL,
+            category: b.categoryName || b.category?.name || "",
+            authors: authorsList.join(", "),
+        };
+    }
+
 function Reservations({ userId }) {
-  const [items, setItems] = useState(null);
-  const load = () => fetchUserReservations(userId).then(setItems).catch(() => setItems([]));
-  useEffect(() => { load(); }, [userId]);
+    const [items, setItems] = useState(null);
+    const load = useCallback(() => {
+        fetchUserReservations(userId).then(setItems).catch(() => setItems([]));
+    }, [userId]);
+    useEffect(() => { load(); }, [load]);
+    const cancel = async (rid) => {
+        try { await cancelReservation(rid); load(); } catch (e) { alert(e.response?.data?.detail || "Eroare"); }
+    };
 
-  const cancel = async (rid) => {
-    try { await cancelReservation(rid); load(); } catch (e) { alert(e.response?.data?.detail || "Eroare"); }
-  };
+    if (!items) return <Loader />;
+    if (items.length === 0) return <Empty msg="Nicio rezervare încă. Începe explorarea catalogului." cta />;
 
-  if (!items) return <Loader />;
-  if (items.length === 0) return <Empty msg="Nicio rezervare încă. Începe explorarea catalogului." cta />;
-
-  return (
-    <div className="grid gap-4" data-testid="reservations-list">
-      {items.map((r) => (
-        <div key={r.reservationId} className="paper p-5 flex flex-col md:flex-row gap-5 items-stretch md:items-center">
-          <Link to={`/carte/${r.book?.bookId}`} className="shrink-0">
-            <div className="w-20 h-28 rounded overflow-hidden" style={{ background: "var(--cream-2)" }}>
-              {r.book?.coverImageURL && <img src={r.book.coverImageURL} alt="" className="w-full h-full object-cover" />}
-            </div>
-          </Link>
-          <div className="flex-1">
-            <div className="text-xs uppercase tracking-widest opacity-60">{r.book?.categoryName}</div>
-            <Link to={`/carte/${r.book?.bookId}`} className="font-serif text-2xl hover:underline">{r.book?.title}</Link>
-            <div className="text-sm opacity-70 italic-soft font-serif">{r.book?.authors?.join(", ")}</div>
-            <div className="mt-3 flex items-center gap-3 text-xs opacity-70">
-              <StatusChip status={r.status} />
-              {r.reservationDate && <span>Rezervat: {new Date(r.reservationDate).toLocaleDateString("ro-RO")}</span>}
-              {r.expirationDate && <span>Expiră: {new Date(r.expirationDate).toLocaleDateString("ro-RO")}</span>}
-            </div>
-          </div>
-          {["WAITING", "CONFIRMED", "READY_FOR_PICKUP", "CREATED"].includes(r.status) && (
-            <button onClick={() => cancel(r.reservationId)} className="btn btn-secondary !text-sm" data-testid={`cancel-res-${r.reservationId}`}>
-              Anulează
-            </button>
-          )}
+    return (
+        <div className="grid gap-4" data-testid="reservations-list">
+            {items.map((r) => {
+                const b = bookInfo(r.book);
+                return (
+                    <div key={r.reservationId} className="paper p-5 flex flex-col md:flex-row gap-5 items-stretch md:items-center">
+                        <Link to={`/carte/${b.id}`} className="shrink-0">
+                            <div className="w-20 h-28 rounded overflow-hidden" style={{ background: "var(--cream-2)" }}>
+                                {b.cover && <img src={b.cover} alt="" className="w-full h-full object-cover" />}
+                            </div>
+                        </Link>
+                        <div className="flex-1">
+                            <div className="text-xs uppercase tracking-widest opacity-60">{b.category}</div>
+                            <Link to={`/carte/${b.id}`} className="font-serif text-2xl hover:underline">{b.title}</Link>
+                            <div className="text-sm opacity-70 italic-soft font-serif">{b.authors}</div>
+                            <div className="mt-3 flex items-center gap-3 text-xs opacity-70">
+                                <StatusChip status={r.status} />
+                                {r.reservationDate && <span>Rezervat: {new Date(r.reservationDate).toLocaleDateString("ro-RO")}</span>}
+                                {r.expirationDate && <span>Expiră: {new Date(r.expirationDate).toLocaleDateString("ro-RO")}</span>}
+                            </div>
+                        </div>
+                        {["WAITING", "CONFIRMED", "READY_FOR_PICKUP", "CREATED"].includes(r.status) && (
+                            <button onClick={() => cancel(r.reservationId)} className="btn btn-secondary !text-sm" data-testid={`cancel-res-${r.reservationId}`}>
+                                Anulează
+                            </button>
+                        )}
+                    </div>
+                );
+            })}
         </div>
-      ))}
-    </div>
-  );
+    );
 }
 
 function Downloads({ userId }) {
-  const [items, setItems] = useState(null);
-  useEffect(() => { fetchDownloads(userId).then(setItems).catch(() => setItems([])); }, [userId]);
-  if (!items) return <Loader />;
-  if (items.length === 0) return <Empty msg="Niciun PDF descărcat încă." />;
-  return (
-    <div className="grid gap-3" data-testid="downloads-list">
-      {items.map((b, i) => (
-        <div key={i} className="paper p-4 flex items-center gap-4">
-          <Link to={`/carte/${b.bookId}`} className="shrink-0">
-            <div className="w-12 h-16 rounded overflow-hidden" style={{ background: "var(--cream-2)" }}>
-              {b.coverImageURL && <img src={b.coverImageURL} className="w-full h-full object-cover" alt="" />}
-            </div>
-          </Link>
-          <div className="flex-1">
-            <Link to={`/carte/${b.bookId}`} className="font-serif text-lg hover:underline">{b.title}</Link>
-            <div className="text-xs opacity-60">Descărcat: {new Date(b.downloadDate).toLocaleString("ro-RO")}</div>
-          </div>
+    const [items, setItems] = useState(null);
+    useEffect(() => { fetchDownloads(userId).then(setItems).catch(() => setItems([])); }, [userId]);
+    if (!items) return <Loader />;
+    if (items.length === 0) return <Empty msg="Niciun PDF descărcat încă." />;
+    return (
+        <div className="grid gap-3" data-testid="downloads-list">
+            {items.map((d) => {
+                const b = d.book || {};
+                return (
+                    <div key={d.downloadId} className="paper p-4 flex items-center gap-4">
+                        <Link to={`/carte/${b.bookId}`} className="shrink-0">
+                            <div className="w-12 h-16 rounded overflow-hidden" style={{ background: "var(--cream-2)" }}>
+                                {b.coverImageURL && <img src={b.coverImageURL} className="w-full h-full object-cover" alt="" />}
+                            </div>
+                        </Link>
+                        <div className="flex-1">
+                            <Link to={`/carte/${b.bookId}`} className="font-serif text-lg hover:underline">{b.title}</Link>
+                            <div className="text-xs opacity-60">Descărcat: {new Date(d.downloadDate).toLocaleString("ro-RO")}</div>
+                        </div>
+                    </div>
+                );
+            })}
         </div>
-      ))}
-    </div>
-  );
+    );
 }
 
 function Wishlist({ userId }) {
-  const [items, setItems] = useState(null);
-  const load = () => fetchWishlist(userId).then(setItems).catch(() => setItems([]));
-  useEffect(() => { load(); }, [userId]);
+    const [items, setItems] = useState(null);
+    const load = useCallback(() => {
+        fetchWishlist(userId).then(setItems).catch(() => setItems([]));
+    }, [userId]);
+    useEffect(() => { load(); }, [load]);
   if (!items) return <Loader />;
   if (items.length === 0) return <Empty msg="Wishlist-ul tău e gol. Marchează cărți pentru mai târziu." />;
 
@@ -166,10 +189,11 @@ function Wishlist({ userId }) {
 }
 
 function Notifications({ userId }) {
-  const [items, setItems] = useState(null);
-  const load = () => fetchUserNotifications(userId).then(setItems).catch(() => setItems([]));
-  useEffect(() => { load(); }, [userId]);
-
+    const [items, setItems] = useState(null);
+    const load = useCallback(() => {
+        fetchUserNotifications(userId).then(setItems).catch(() => setItems([]));
+    }, [userId]);
+    useEffect(() => { load(); }, [load]);
   if (!items) return <Loader />;
   if (items.length === 0) return <Empty msg="Nicio notificare." />;
 
