@@ -4,6 +4,15 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+### Secrets / Local config ###
+src/main/resources/application-local.properties
+src/main/resources/application-*.properties
+!src/main/resources/application.properties
+!src/main/resources/application-local.properties.example
+.env
+.env.*
+!.env.example
+
 ### STS ###
 .apt_generated
 .classpath
@@ -14,10 +23,25 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
 
+### VS Code ###
+.vscode/
+
+### macOS ###
 .DS_Store
+**/.DS_Store
+__MACOSX/
+
+### Logs ###
 *.log
+logs/
+
+### Node / Frontend ###
+node_modules/
+frontend/build/
+frontend/.env
+frontend/.env.local

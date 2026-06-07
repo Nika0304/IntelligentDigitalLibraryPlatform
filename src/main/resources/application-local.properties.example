@@ -1,0 +1,24 @@
+# =====================================================================
+# TEMPLATE pentru dezvoltare locala.
+# Copiaza acest fisier in `application-local.properties` (in acelasi folder)
+# si completeaza cu valorile tale REALE. NU comita `application-local.properties`!
+#
+# Activare:
+#   - rulezi cu: --spring.profiles.active=local
+#   - sau setezi:  SPRING_PROFILES_ACTIVE=local
+# =====================================================================
+
+# --- Database ---
+DB_URL=jdbc:postgresql://localhost:5432/digital_library
+DB_USERNAME=postgres
+DB_PASSWORD=schimba-ma
+
+# --- JWT ---
+# Genereaza unul cu: openssl rand -base64 48
+JWT_SECRET=digital-library-secret
+JWT_EXPIRATION=86400000
+
+# --- Gmail SMTP ---
+# Foloseste un "App Password" generat din Google Account -> Security -> App passwords
+MAIL_USERNAME=adresa-ta@gmail.com
+MAIL_PASSWORD=app-password-din-google
