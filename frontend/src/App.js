@@ -14,6 +14,8 @@ import "./App.css";
 import ChatWidget from "./components/ChatWidget";
 import Groups from "./pages/Groups";
 import GroupDetail from "./pages/GroupDetail";
+import Wrapped from "./pages/Wrapped";
+import Challenges from "./pages/Challenges";
 
 export default function App() {
   return (
@@ -31,7 +33,8 @@ export default function App() {
             <Route path="/admin" element={<Admin />} />
               <Route path="/cercuri" element={<Groups />} />
               <Route path="/cercuri/:id" element={<GroupDetail />} />
-
+              <Route path="/wrapped" element={<Wrapped />} />
+              <Route path="/provocari" element={<Challenges />} />
             <Route path="*" element={<Home />} />
           </Routes>
             <ChatWidget />

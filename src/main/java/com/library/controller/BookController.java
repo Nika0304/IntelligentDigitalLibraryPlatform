@@ -19,6 +19,8 @@ import com.library.repository.UserRepository;
 import com.library.service.DownloadHistoryService;
 import com.library.model.DownloadHistory;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.library.dto.BookSearchResponse;
+import com.library.service.BookSearchService;
 
 import java.util.List;
 
@@ -30,16 +32,19 @@ public class BookController
     private final PdfGeneratorService pdfGeneratorService;
     private final DownloadHistoryService downloadHistoryService;
     private final UserRepository userRepository;
+    private final BookSearchService bookSearchService;
 
     public BookController(BookService bookService,
                           PdfGeneratorService pdfGeneratorService,
                           DownloadHistoryService downloadHistoryService,
-                          UserRepository userRepository)
+                          UserRepository userRepository,
+                          BookSearchService bookSearchService)
     {
         this.bookService = bookService;
         this.pdfGeneratorService = pdfGeneratorService;
         this.downloadHistoryService = downloadHistoryService;
         this.userRepository = userRepository;
+        this.bookSearchService = bookSearchService;
     }
 
     @GetMapping("/{id}/download")
@@ -198,4 +203,34 @@ public class BookController
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(message);
     }
+
+
+    @GetMapping("/filter")
+    public ResponseEntity<?> filterBooks(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) List<Long> categoryIds,
+            @RequestParam(required = false) List<Long> authorIds,
+            @RequestParam(required = false, defaultValue = "all") String type,
+            @RequestParam(required = false) Integer yearFrom,
+            @RequestParam(required = false) Integer yearTo,
+            @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) Boolean onlyAvailable,
+            @RequestParam(required = false, defaultValue = "relevance") String sort,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size)
+    {
+        try
+        {
+            BookSearchResponse result = bookSearchService.search(
+                    q, categoryIds, authorIds, type,
+                    yearFrom, yearTo, minRating, onlyAvailable,
+                    sort, page, size);
+            return ResponseEntity.ok(result);
+        }
+        catch (RuntimeException e)
+        {
+            return handleBookException(e);
+        }
+    }
+
 }

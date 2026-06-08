@@ -162,7 +162,8 @@ export const applyVoteWinner = (id) => api.post(`/groups/${id}/vote/apply`).then
 export const toggleGroupMute = (id) => api.post(`/groups/${id}/toggle-mute`).then((r) => r.data);
 export const fetchRecommendations = (limit = 6) =>
     api.get(`/recommendations/me?limit=${limit}`).then((r) => r.data);
-
+export const fetchRecommendationSections = (limit = 6) =>
+    api.get(`/recommendations/sections?limit=${limit}`).then((r) => r.data);
 // Rapoarte
 export const downloadReport = (path, filename) =>
     api.get(`/reports/${path}`, { responseType: "blob" }).then((r) => {
@@ -175,3 +176,33 @@ export const downloadReport = (path, filename) =>
         a.remove();
         window.URL.revokeObjectURL(url);
     });
+
+// Catalog avansat — search + filtre + paginare + facete
+export const searchBooksAdvanced = (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set("q", params.q);
+    if (params.type && params.type !== "all") qs.set("type", params.type);
+    if (params.yearFrom != null) qs.set("yearFrom", params.yearFrom);
+    if (params.yearTo != null) qs.set("yearTo", params.yearTo);
+    if (params.minRating != null) qs.set("minRating", params.minRating);
+    if (params.onlyAvailable) qs.set("onlyAvailable", "true");
+    if (params.sort) qs.set("sort", params.sort);
+    if (params.page != null) qs.set("page", params.page);
+    if (params.size != null) qs.set("size", params.size);
+    (params.categoryIds || []).forEach((id) => qs.append("categoryIds", id));
+    (params.authorIds || []).forEach((id) => qs.append("authorIds", id));
+    return api.get(`/books/filter?${qs.toString()}`).then((r) => r.data);
+};
+
+export const fetchMyWrapped = (year) =>
+    api.get(`/wrapped/me${year ? `?year=${year}` : ""}`).then((r) => r.data);
+
+// Reading Challenges
+export const fetchChallenges = () => api.get("/challenges").then((r) => r.data);
+export const fetchMyChallenges = () => api.get("/challenges/me").then((r) => r.data);
+export const joinChallenge = (id) => api.post(`/challenges/${id}/join`).then((r) => r.data);
+export const leaveChallenge = (id) => api.post(`/challenges/${id}/leave`);
+export const createChallenge = (data) => api.post("/challenges", data).then((r) => r.data);
+export const updateChallenge = (id, data) => api.put(`/challenges/${id}`, data).then((r) => r.data);
+export const archiveChallenge = (id) => api.delete(`/challenges/${id}`);
+export const fetchDashboard = () => api.get("/stats/dashboard").then((r) => r.data);

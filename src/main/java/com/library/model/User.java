@@ -3,6 +3,8 @@ package com.library.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name  = "users")
 public class User
@@ -25,6 +27,9 @@ public class User
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "role_id", nullable = false)
@@ -58,4 +63,12 @@ public class User
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
+
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+    }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime d) { this.createdAt = d; }
 }

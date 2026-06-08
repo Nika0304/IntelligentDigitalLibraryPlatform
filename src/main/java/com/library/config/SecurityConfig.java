@@ -76,6 +76,15 @@ public class SecurityConfig
 // 3. Restul (join, leave, vote, messages, mute) cer autentificare
                                 .requestMatchers("/api/groups/**").authenticated()
                                 .requestMatchers("/api/recommendations/**").authenticated()
+                                // Challenges
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/challenges").permitAll()
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/challenges/me").authenticated()
+                                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/challenges/*/join").authenticated()
+                                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/challenges/*/leave").authenticated()
+                                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/challenges").hasRole("ADMIN")
+                                .requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/challenges/**").hasRole("ADMIN")
+                                .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/challenges/**").hasRole("ADMIN")
+                                .requestMatchers("/api/wrapped/**").authenticated()
                                 .requestMatchers("/api/reports/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )

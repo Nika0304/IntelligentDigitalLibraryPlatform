@@ -42,6 +42,12 @@ export default function Header() {
                 data-testid="nav-groups">
                 Cercuri
             </NavLink>
+            <NavLink
+                to="/provocari"
+                className={({isActive}) => `tab-link ${isActive ? "active" : ""}`}
+                data-testid="nav-challenges">
+                Provocări
+            </NavLink>
             {user && <NavLink to="/profil" className={({isActive}) => `tab-link ${isActive ? "active" : ""}`} data-testid="nav-profile">Profil</NavLink>}
           {isAdmin && <NavLink to="/admin" className={({isActive}) => `tab-link ${isActive ? "active" : ""}`} data-testid="nav-admin">Admin</NavLink>}
         </nav>

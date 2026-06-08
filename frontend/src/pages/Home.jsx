@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Search, BookMarked, Download, Sparkles, Bell, BarChart3, Quote } from "lucide-react";
 import BookCard from "../components/BookCard";
+import RecommendationSections from "../components/RecommendationSections";
 import { fetchBooks, fetchStats } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
 import { fetchTopGroups } from "../lib/api";
@@ -297,6 +298,8 @@ export default function Home() {
           {featured.map((b) => <BookCard key={b.bookId} book={b} />)}
         </div>
       </section>
+        {/* Recomandări personalizate (doar utilizatori logați) */}
+        <RecommendationSections limit={6} />
 
 
         {/* How it works */}
@@ -466,7 +469,9 @@ export default function Home() {
                             <>
                                 Bine ai revenit,
                                 <br />
-                                <em className="italic font-normal">{user.fullName?.split(" ")[0]}</em>.
+                                <em className="italic font-normal">
+                                    {user.fullName?.split(" ")[0]}
+                                </em>
                             </>
                         ) : (
                             <>
@@ -475,7 +480,6 @@ export default function Home() {
                                 raft digital?
                             </>
                         )}
-                        raft digital?
                     </h2>
 
                     <p

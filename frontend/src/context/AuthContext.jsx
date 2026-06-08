@@ -23,11 +23,12 @@ export function AuthProvider({ children }) {
     setUser(u);
     return u;
   };
-  const register = async (data) => {
-    const u = await A.register(data);
-    setUser(u);
-    return u;
-  };
+    const register = async (data) => {
+        await A.register(data);                          // 1. Creează contul
+        const u = await A.login(data.email, data.password); // 2. Login automat → primește token
+        setUser(u);                                      // 3. Acum user are token
+        return u;
+    };
   const logout = () => setUser(null);
   const isAdmin = user?.roleName === "ADMIN";
 

@@ -54,6 +54,10 @@ import {
     Users2,
     FileText
 } from "lucide-react";
+import ChallengesAdmin from "../components/ChallengesAdmin";
+import { Trophy } from "lucide-react";
+import AdminDashboard from "../components/AdminDashboard";
+import { LayoutDashboard } from "lucide-react";
 
 const TABS = [
     { id: "stats", label: "Sumar", icon: BarChart3 },
@@ -66,12 +70,14 @@ const TABS = [
     { id: "chat", label: "Chat & FAQ", icon: MessageCircle },
     { id: "groups", label: "Cercuri", icon: Users2 },
     { id: "reports", label: "Rapoarte", icon: FileText },
+    { id: "challenges", label: "Provocări", icon: Trophy },
+    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
 
 export default function Admin() {
     const { user, isAdmin } = useAuth();
     const [params, setParams] = useSearchParams();
-    const active = params.get("tab") || "stats";
+    const active = params.get("tab") || "dashboard";
 
     if (!user) return <Navigate to="/autentificare" replace />;
     if (!isAdmin) return <Navigate to="/profil" replace />;
@@ -121,6 +127,8 @@ export default function Admin() {
                 {active === "chat" && <ChatAdmin />}
                 {active === "groups" && <GroupsAdmin />}
                 {active === "reports" && <ReportsAdmin />}
+                {active === "challenges" && <ChallengesAdmin />}
+                {active === "dashboard" && <AdminDashboard />}
             </div>
 
         </main>
