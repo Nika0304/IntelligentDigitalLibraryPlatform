@@ -7,6 +7,7 @@ import com.library.model.User;
 import com.library.repository.NotificationRepository;
 import com.library.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import com.library.model.RoleType;
 
 import java.util.List;
 
@@ -94,6 +95,25 @@ public class NotificationService
         Notification saved = notificationRepository.save(notification);
         emailService.sendNotificationEmail(saved);
         return saved;
+    }
+
+    public void notifyAdmins(String message, NotificationType type)
+    {
+        validateMessage(message);
+        validateNotificationType(type);
+
+        List<User> admins = userRepository.findByRole_RoleName(RoleType.ADMIN);
+
+        for (User admin : admins)
+        {
+            try
+            {
+                createAutomaticNotification(admin, message, type);
+            }
+            catch (Exception ignored)
+            {
+            }
+        }
     }
 
     public Notification markAsRead(Long notificationId)

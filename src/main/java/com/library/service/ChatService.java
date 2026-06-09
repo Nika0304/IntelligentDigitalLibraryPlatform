@@ -128,7 +128,15 @@ public class ChatService
     {
         User u = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        return questionRepository.save(new ChatQuestion(u, message));
+
+        ChatQuestion saved = questionRepository.save(new ChatQuestion(u, message));
+
+        notificationService.notifyAdmins(
+                "Întrebare nouă de la " + u.getFullName() + ": \"" + message + "\"",
+                NotificationType.SYSTEM
+        );
+
+        return saved;
     }
 
     public List<ChatQuestion> getUserQuestions(Long userId)

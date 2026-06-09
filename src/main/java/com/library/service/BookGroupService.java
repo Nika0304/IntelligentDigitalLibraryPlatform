@@ -37,7 +37,6 @@ public class BookGroupService
     }
 
     // ---- Group lifecycle ----
-
     @Transactional
     public BookGroup proposeGroup(Long userId, String name, String theme, String description)
     {
@@ -48,7 +47,14 @@ public class BookGroupService
         if (description == null || description.isBlank()) throw new RuntimeException("Descrierea e obligatorie.");
 
         BookGroup group = new BookGroup(name.trim(), theme.trim(), description.trim(), creator);
-        return groupRepository.save(group);
+        BookGroup saved = groupRepository.save(group);
+
+        notificationService.notifyAdmins(
+                "Grup nou propus de " + creator.getFullName() + ": „" + saved.getName() + "”. Necesită aprobare.",
+                NotificationType.SYSTEM
+        );
+
+        return saved;
     }
 
     public List<Map<String, Object>> listApproved()

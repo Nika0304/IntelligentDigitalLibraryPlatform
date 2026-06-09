@@ -132,6 +132,12 @@ public class ReservationService
 
         Reservation savedReservation = reservationRepository.save(reservation);
 
+        notificationService.notifyAdmins(
+                "Rezervare nouă de la " + savedReservation.getUser().getFullName()
+                        + " pentru cartea „" + savedReservation.getBook().getTitle() + "”.",
+                NotificationType.GENERAL
+        );
+
         if (savedReservation.getStatus() == ReservationStatus.CONFIRMED)
         {
             notificationService.createAutomaticNotification(
@@ -181,6 +187,7 @@ public class ReservationService
         bookCopyRepository.save(bookCopy);
 
         Reservation savedReservation = reservationRepository.save(reservation);
+
 
         notificationService.createAutomaticNotification(
                 savedReservation.getUser(),
