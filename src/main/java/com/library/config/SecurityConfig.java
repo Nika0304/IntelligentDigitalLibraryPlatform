@@ -52,7 +52,8 @@ public class SecurityConfig
 
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/api/fines/**").hasRole("ADMIN")
-                        .requestMatchers("/api/book-copies/**").hasRole("ADMIN")
+                                .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/book-copies/**").permitAll()
+                                .requestMatchers("/api/book-copies/**").hasRole("ADMIN")
 
                         .requestMatchers("/api/chat/faq").permitAll()
                         .requestMatchers("/api/chat/match").permitAll()

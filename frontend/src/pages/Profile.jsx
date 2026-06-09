@@ -225,7 +225,15 @@ function Notifications({ userId }) {
     return (
         <div>
             <div className="flex justify-end mb-3">
-                <button onClick={async () => { await markAllRead(userId); load(); }} className="btn btn-secondary !text-xs" data-testid="mark-all-read">
+                <button
+                    onClick={async () => {
+                        await markAllRead(userId);
+                        await load();
+                        window.dispatchEvent(new Event("notifications-updated"));
+                    }}
+                    className="btn btn-secondary !text-xs"
+                    data-testid="mark-all-read"
+                >
                     <Check size={12} /> Marchează toate ca citite
                 </button>
             </div>
@@ -233,17 +241,24 @@ function Notifications({ userId }) {
                 {items.map((n) => (
                     <div
                         key={n.notificationId}
-                        className={`paper p-4 flex items-start gap-4 ${n.isRead ? "opacity-60" : ""}`}
+                        className={`paper p-4 flex items-start gap-4 ${n.read ? "opacity-60" : ""}`}
                         data-testid={`notification-${n.notificationId}`}
                     >
-                        <div className="w-2 h-2 mt-2 rounded-full" style={{ background: n.isRead ? "var(--line)" : "var(--rose-2)" }} />
+                        <div className="w-2 h-2 mt-2 rounded-full" style={{ background: n.read ? "var(--line)" : "var(--rose-2)" }} />
                         <div className="flex-1">
                             <div className="text-xs uppercase tracking-widest opacity-60">{n.type.replace(/_/g, " ").toLowerCase()}</div>
                             <p className="mt-1 text-sm">{n.message}</p>
                             <div className="text-xs opacity-50 mt-1">{new Date(n.createdAt).toLocaleString("ro-RO")}</div>
                         </div>
-                        {!n.isRead && (
-                            <button onClick={async () => { await markNotificationRead(n.notificationId); load(); }} className="btn btn-ghost !text-xs !p-2">
+                        {!n.read && (
+                            <button
+                                onClick={async () => {
+                                    await markNotificationRead(n.notificationId);
+                                    await load();
+                                    window.dispatchEvent(new Event("notifications-updated"));
+                                }}
+                                className="btn btn-ghost !text-xs !p-2"
+                            >
                                 <Check size={12} />
                             </button>
                         )}

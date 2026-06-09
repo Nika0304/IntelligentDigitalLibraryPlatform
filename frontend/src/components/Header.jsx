@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Search, BookOpen, Bell, ChevronDown, User as UserIcon, LogOut, Heart, Shield } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { fetchUserNotifications } from "../lib/api";
@@ -7,16 +7,33 @@ import { fetchUserNotifications } from "../lib/api";
 export default function Header() {
   const { user, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [unread, setUnread] = useState(0);
   const [q, setQ] = useState("");
 
-  useEffect(() => {
-    if (!user) { setUnread(0); return; }
-    fetchUserNotifications(user.userId).then((ns) => {
-      setUnread(ns.filter((n) => !n.isRead).length);
-    }).catch(() => {});
-  }, [user]);
+    useEffect(() => {
+        const loadUnread = () => {
+            if (!user) {
+                setUnread(0);
+                return;
+            }
+
+            fetchUserNotifications(user.userId)
+                .then((ns) => {
+                    setUnread(ns.filter((n) => !n.read).length);
+                })
+                .catch(() => {});
+        };
+
+        loadUnread();
+
+        window.addEventListener("notifications-updated", loadUnread);
+
+        return () => {
+            window.removeEventListener("notifications-updated", loadUnread);
+        };
+    }, [user, location.pathname, location.search]);
 
   const submitSearch = (e) => {
     e.preventDefault();
