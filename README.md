@@ -261,7 +261,7 @@ Scopul proiectului este realizarea unei platforme moderne pentru bibliotecă, ca
 
 Proiect realizat de:
 
-- Nicoleta Tîrșina
+- Nicoleta Tîrsîna
 - Alexandra Tănase
 
 ## Status proiect
